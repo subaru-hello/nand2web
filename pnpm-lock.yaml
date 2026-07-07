@@ -26,6 +26,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@nand2web/logic':
+        specifier: workspace:^
+        version: link:../../packages/logic
       '@nand2web/sim-core':
         specifier: workspace:^
         version: link:../../packages/sim-core

@@ -37,7 +37,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "From NAND to ALU",
         description:
           "Build every gate from NAND, then compose adders, latches, registers, and a working 4-bit ALU. Toggle inputs and watch signals propagate.",
-        status: "wip",
+        status: "done",
+        route: "/logic",
         topics: [
           "NAND completeness",
           "combinational vs. sequential",
