@@ -1,6 +1,8 @@
 import { INSTRUCTIONS } from "@nand2web/cpu";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CpuPlayground } from "../../features/cpu/CpuPlayground";
+import { cpuDeepDive } from "../../features/cpu/deepdive";
+import { DeepDive } from "../../features/deepdive/DeepDive";
 
 export const Route = createFileRoute("/cpu/")({
   component: CpuPage,
@@ -71,6 +73,8 @@ function CpuPage() {
           </table>
         </div>
       </section>
+
+      <DeepDive content={cpuDeepDive} />
     </div>
   );
 }

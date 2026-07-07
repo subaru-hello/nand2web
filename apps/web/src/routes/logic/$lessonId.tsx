@@ -1,4 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { DeepDive } from "../../features/deepdive/DeepDive";
+import { logicDeepDives } from "../../features/logic/deepdives";
 import { getLesson, lessons } from "../../features/logic/lessons";
 
 export const Route = createFileRoute("/logic/$lessonId")({
@@ -27,6 +29,7 @@ function LessonPage() {
   }
   const prev = lessons[index - 1];
   const next = lessons[index + 1];
+  const deepDive = logicDeepDives[lesson.id];
 
   return (
     <article>
@@ -43,6 +46,8 @@ function LessonPage() {
       </header>
 
       <lesson.Content />
+
+      {deepDive && <DeepDive content={deepDive} />}
 
       <nav className="mt-10 flex justify-between border-zinc-800 border-t pt-6 text-sm">
         {prev ? (

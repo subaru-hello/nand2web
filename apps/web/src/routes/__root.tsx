@@ -1,4 +1,5 @@
 import { createRootRoute, Link, Outlet } from "@tanstack/react-router";
+import { LangToggle } from "../features/deepdive/DeepDive";
 
 export const Route = createRootRoute({
   component: RootLayout,
@@ -17,7 +18,8 @@ function RootLayout() {
             <span className="text-zinc-400">2</span>
             <span className="text-sky-400">web</span>
           </Link>
-          <nav className="flex items-center gap-5 text-sm text-zinc-400">
+          <nav className="flex items-center gap-4 text-sm text-zinc-400">
+            <LangToggle />
             <a
               href="https://github.com/subaru-hello/nand2web"
               target="_blank"
