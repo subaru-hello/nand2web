@@ -30,7 +30,11 @@ export interface ListingEntry {
 }
 
 export type AssembleResult =
-  | { readonly ok: true; readonly program: readonly number[]; readonly listing: readonly ListingEntry[] }
+  | {
+      readonly ok: true;
+      readonly program: readonly number[];
+      readonly listing: readonly ListingEntry[];
+    }
   | { readonly ok: false; readonly errors: readonly AssembleError[] };
 
 interface ParsedLine {

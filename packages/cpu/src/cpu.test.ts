@@ -13,10 +13,15 @@ function runSource(
 ): { outputs: number[]; final: CpuState } {
   const result = assemble(source);
   if (!result.ok) {
-    throw new Error(result.errors.map((e) => `L${e.line}: ${e.message}`).join("; "));
+    throw new Error(
+      result.errors.map((e) => `L${e.line}: ${e.message}`).join("; "),
+    );
   }
   const { steps, result: final } = collectSteps(
-    run(result.program, { input: options?.input ?? 0, maxCycles: options?.maxCycles ?? 400 }),
+    run(result.program, {
+      input: options?.input ?? 0,
+      maxCycles: options?.maxCycles ?? 400,
+    }),
   );
   if (!final) {
     throw new Error("cycle limit hit during collectSteps");
@@ -39,7 +44,9 @@ describe("assembler", () => {
   });
 
   it("reports errors with line numbers", () => {
-    const result = assemble("  LDI 3\n  FROB 1\n  LDI 99\n  ADD 2\n  JMP nowhere");
+    const result = assemble(
+      "  LDI 3\n  FROB 1\n  LDI 99\n  ADD 2\n  JMP nowhere",
+    );
     expect(result.ok).toBe(false);
     if (!result.ok) {
       const byLine = new Map(result.errors.map((e) => [e.line, e.message]));
@@ -70,15 +77,23 @@ describe("assembler", () => {
       .chain((spec) =>
         spec.operand === "none"
           ? fc.constant(encode(spec, 0))
-          : fc.integer({ min: 0, max: 15 }).map((operand) => encode(spec, operand)),
+          : fc
+              .integer({ min: 0, max: 15 })
+              .map((operand) => encode(spec, operand)),
       );
     fc.assert(
-      fc.property(fc.array(instrArb, { minLength: 1, maxLength: 16 }), (bytes) => {
-        const padded = [...bytes, ...Array(16 - bytes.length).fill(0)];
-        const text = disassemble(padded);
-        const reassembled = assemble(text);
-        return reassembled.ok && reassembled.program.every((b, i) => b === padded[i]);
-      }),
+      fc.property(
+        fc.array(instrArb, { minLength: 1, maxLength: 16 }),
+        (bytes) => {
+          const padded = [...bytes, ...Array(16 - bytes.length).fill(0)];
+          const text = disassemble(padded);
+          const reassembled = assemble(text);
+          return (
+            reassembled.ok &&
+            reassembled.program.every((b, i) => b === padded[i])
+          );
+        },
+      ),
     );
   });
 
@@ -137,9 +152,7 @@ describe("machine", () => {
           const { outputs, final } = runSource(
             `LDI ${a}\nTAB\nLDI ${b}\nADD\nOUT\nHLT`,
           );
-          return (
-            outputs[0] === ((a + b) & 0xf) && final.carry === (a + b > 15)
-          );
+          return outputs[0] === ((a + b) & 0xf) && final.carry === a + b > 15;
         },
       ),
     );
@@ -158,7 +171,7 @@ describe("machine", () => {
           return (
             outputs[0] === ((a - b) & 0xf) &&
             final.zero === (a === b) &&
-            final.carry === (a >= b)
+            final.carry === a >= b
           );
         },
       ),

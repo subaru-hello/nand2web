@@ -55,7 +55,8 @@ end:
   {
     id: "fibonacci",
     name: "Fibonacci",
-    description: "Outputs 1, 1, 2, 3, 5, 8, 13 — then halts when 4 bits overflow.",
+    description:
+      "Outputs 1, 1, 2, 3, 5, 8, 13 — then halts when 4 bits overflow.",
     source: `; RAM[0] = prev (starts 0), RAM[1] = current
   LDI 1
   ST 1         ; current = 1

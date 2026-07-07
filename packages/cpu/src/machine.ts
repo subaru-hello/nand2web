@@ -20,9 +20,24 @@ export interface CpuState {
  * step carries the full machine state so the UI can scrub freely.
  */
 export type CpuStep =
-  | { readonly type: "fetch"; readonly state: CpuState; readonly byte: number; readonly active: readonly DatapathNode[] }
-  | { readonly type: "decode"; readonly state: CpuState; readonly instr: DecodedInstruction; readonly active: readonly DatapathNode[] }
-  | { readonly type: "execute"; readonly state: CpuState; readonly instr: DecodedInstruction; readonly active: readonly DatapathNode[] };
+  | {
+      readonly type: "fetch";
+      readonly state: CpuState;
+      readonly byte: number;
+      readonly active: readonly DatapathNode[];
+    }
+  | {
+      readonly type: "decode";
+      readonly state: CpuState;
+      readonly instr: DecodedInstruction;
+      readonly active: readonly DatapathNode[];
+    }
+  | {
+      readonly type: "execute";
+      readonly state: CpuState;
+      readonly instr: DecodedInstruction;
+      readonly active: readonly DatapathNode[];
+    };
 
 export function initialState(input = 0): CpuState {
   return {

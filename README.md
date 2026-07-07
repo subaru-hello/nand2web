@@ -11,7 +11,7 @@ nand2web is an interactive computer-science curriculum. Every concept — from a
 | Layer | Module | Status |
 |---|---|---|
 | 1 | [Digital Logic](https://cs.n10u.jp/logic) — NAND → gates → adder → flip-flop → ALU | ✅ done |
-| 2 | 4-bit CPU — fetch/decode/execute, tiny ISA + assembler | 🚧 next |
+| 2 | [4-bit CPU](https://cs.n10u.jp/cpu) — fetch/decode/execute, tiny ISA + assembler | ✅ done |
 | 3 | Computer Architecture — pipelining, cache hierarchy | 📋 planned |
 | 4 | Operating Systems — scheduling, virtual memory | 📋 planned |
 | 5 | Compilers & Languages — lexer → parser → AST → eval | 📋 planned |

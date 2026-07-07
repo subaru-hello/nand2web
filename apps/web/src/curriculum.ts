@@ -59,8 +59,9 @@ export const curriculum: readonly CurriculumLayer[] = [
         id: "cpu-4bit",
         title: "4-bit CPU",
         description:
-          "Write assembly for a tiny 12-instruction ISA and watch fetch → decode → execute animate across the datapath, cycle by cycle.",
-        status: "planned",
+          "Write assembly for a tiny 16-instruction ISA and watch fetch → decode → execute animate across the datapath, cycle by cycle.",
+        status: "done",
+        route: "/cpu",
         topics: [
           "ISA design",
           "datapath & control",

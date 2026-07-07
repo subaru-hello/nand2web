@@ -26,6 +26,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@nand2web/cpu':
+        specifier: workspace:^
+        version: link:../../packages/cpu
       '@nand2web/logic':
         specifier: workspace:^
         version: link:../../packages/logic
