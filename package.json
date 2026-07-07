@@ -1,0 +1,21 @@
+{
+  "name": "nand2web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter @nand2web/web dev",
+    "build": "pnpm --filter @nand2web/web build",
+    "test": "pnpm -r test",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "biome ci .",
+    "format": "biome check --write .",
+    "deploy": "pnpm build && wrangler deploy"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.2",
+    "fast-check": "^4.8.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.10",
+    "wrangler": "^4.107.0"
+  }
+}
