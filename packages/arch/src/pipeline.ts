@@ -283,7 +283,6 @@ function* pipelineGen(
   let stallCount = 0;
   let forwardCount = 0;
   let flushCount = 0;
-  let instructionsDone = 0;
 
   const totalInstructions = instructions.length;
 
@@ -297,7 +296,6 @@ function* pipelineGen(
 
     if (isReal(wb_slot)) {
       if (wb_wrReg !== 0) writeReg(wb_wrReg, wb_result);
-      instructionsDone++;
     }
 
     // ── MEM: access data memory using EX/MEM latch ───────────────────────
