@@ -1,35 +1,77 @@
 /**
- * Lesson completion, stored client-side. Starts as localStorage; the
- * repository shape leaves room to swap in IndexedDB (and later a Durable
- * Object sync backend) without touching call sites.
+ * Lesson completion, backed by IndexedDB.
+ *
+ * On first load, performs a one-time migration: if localStorage has
+ * "nand2web:completed" and idb is empty, the data is copied into idb.
+ * localStorage is left as-is (harmless; language pref stays there too).
  */
 
-const KEY = "nand2web:completed";
+import { useEffect, useState } from "react";
+import { getCompleted, setCompleted } from "../persistence/db";
 
-function read(): Set<string> {
+const LS_KEY = "nand2web:completed";
+
+// ---------------------------------------------------------------------------
+// One-time localStorage → idb migration (runs once per db open)
+// ---------------------------------------------------------------------------
+
+let _migrated = false;
+
+async function migrateIfNeeded(): Promise<void> {
+  if (_migrated) return;
+  _migrated = true;
+  const raw = localStorage.getItem(LS_KEY);
+  if (!raw) return;
+  const existing = await getCompleted();
+  if (existing.length > 0) return;
   try {
-    const raw = localStorage.getItem(KEY);
-    return new Set(raw ? (JSON.parse(raw) as string[]) : []);
+    const ids = JSON.parse(raw) as string[];
+    if (Array.isArray(ids) && ids.length > 0) {
+      await setCompleted(ids);
+    }
   } catch {
-    return new Set();
+    // malformed localStorage — skip migration
   }
 }
 
-export function isCompleted(lessonId: string): boolean {
-  return read().has(lessonId);
-}
+// ---------------------------------------------------------------------------
+// Public async API
+// ---------------------------------------------------------------------------
 
-export function markCompleted(lessonId: string): void {
-  const all = read();
-  all.add(lessonId);
-  try {
-    localStorage.setItem(KEY, JSON.stringify([...all]));
-  } catch {
-    // storage unavailable (private mode) — completion just won't persist
+/** Mark a lesson as completed in idb. */
+export async function markCompleted(lessonId: string): Promise<void> {
+  await migrateIfNeeded();
+  const ids = await getCompleted();
+  if (!ids.includes(lessonId)) {
+    await setCompleted([...ids, lessonId]);
   }
 }
 
-export function completedCount(lessonIds: readonly string[]): number {
-  const all = read();
-  return lessonIds.filter((id) => all.has(id)).length;
+// ---------------------------------------------------------------------------
+// React hook
+// ---------------------------------------------------------------------------
+
+/**
+ * Returns the set of completed lesson IDs loaded from idb.
+ * Initialises to an empty set on first render; populates asynchronously.
+ */
+export function useCompleted(): Set<string> {
+  const [completed, setCompletedState] = useState<Set<string>>(
+    () => new Set<string>(),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    void migrateIfNeeded().then(async () => {
+      const ids = await getCompleted();
+      if (!cancelled) {
+        setCompletedState(new Set(ids));
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return completed;
 }

@@ -1,24 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore } from "react";
 import { lessons } from "../../features/logic/lessons";
-import { isCompleted } from "../../features/progress/progress";
+import { useCompleted } from "../../features/progress/progress";
 
 export const Route = createFileRoute("/logic/")({
   component: LogicIndexPage,
 });
 
-// Re-render on focus so completion marked in another tab shows up.
-const subscribe = (cb: () => void) => {
-  window.addEventListener("focus", cb);
-  return () => window.removeEventListener("focus", cb);
-};
-
 function LogicIndexPage() {
-  const completedKey = useSyncExternalStore(
-    subscribe,
-    () => lessons.map((l) => (isCompleted(l.id) ? "1" : "0")).join(""),
-    () => "",
-  );
+  const completed = useCompleted();
 
   return (
     <div className="space-y-8">
@@ -37,7 +26,7 @@ function LogicIndexPage() {
       </header>
       <ol className="space-y-3">
         {lessons.map((lesson, i) => {
-          const done = completedKey[i] === "1";
+          const done = completed.has(lesson.id);
           return (
             <li key={lesson.id}>
               <Link
