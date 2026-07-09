@@ -95,6 +95,47 @@ function referenceLru(
   return { hits, faults };
 }
 
+// Independent second-chance (Clock) reference. Tracks the hand position after
+// each access so we can assert the generator's clockHand trace, not just totals
+// — the hand sequence is what the UI renders and where step→UI drift creeps in.
+function referenceClock(
+  refStr: readonly number[],
+  frameCount: number,
+): { hits: number; faults: number; hands: number[] } {
+  const frames: (number | null)[] = Array<number | null>(frameCount).fill(null);
+  const use: boolean[] = Array<boolean>(frameCount).fill(false);
+  const hands: number[] = [];
+  let hits = 0;
+  let faults = 0;
+  let hand = 0;
+  for (const page of refStr) {
+    const idx = frames.indexOf(page);
+    if (idx !== -1) {
+      hits++;
+      use[idx] = true;
+    } else {
+      faults++;
+      const empty = frames.indexOf(null);
+      if (empty !== -1) {
+        frames[empty] = page;
+        use[empty] = true;
+        hand = (empty + 1) % frameCount;
+      } else {
+        // Give each frame a second chance: clear set use-bits until one is 0.
+        while (use[hand]) {
+          use[hand] = false;
+          hand = (hand + 1) % frameCount;
+        }
+        frames[hand] = page;
+        use[hand] = true;
+        hand = (hand + 1) % frameCount;
+      }
+    }
+    hands.push(hand);
+  }
+  return { hits, faults, hands };
+}
+
 // ---------------------------------------------------------------------------
 // Scheduling: deterministic tests
 // ---------------------------------------------------------------------------
@@ -429,6 +470,30 @@ describe("paging — properties", () => {
         const { result } = runPaging(refStr, frameCount, "LRU");
         const ref = referenceLru(refStr, frameCount);
         return result.hits === ref.hits && result.faults === ref.faults;
+      }),
+      { numRuns: 100 },
+    );
+  });
+
+  it("Clock: matches reference implementation (totals + hand trace)", () => {
+    fc.assert(
+      fc.property(refStringArb, frameCountArb, (refStr, frameCount) => {
+        const { steps, result } = runPaging(refStr, frameCount, "Clock");
+        const ref = referenceClock(refStr, frameCount);
+        if (result.hits !== ref.hits || result.faults !== ref.faults) {
+          return false;
+        }
+        // Every emitted step must carry the reference hand position, and it
+        // must be a valid frame index.
+        return steps.every((step, i) => {
+          const hand = step.clockHand;
+          return (
+            hand === ref.hands[i] &&
+            hand !== undefined &&
+            hand >= 0 &&
+            hand < frameCount
+          );
+        });
       }),
       { numRuns: 100 },
     );

@@ -403,10 +403,7 @@ export function PagingPlayground() {
                 hit={step?.hit === true && page === step.access}
                 evicted={evicted}
                 {...(usesBit !== undefined ? { usesBit } : {})}
-                isHand={
-                  step?.clockHand === (i + 1) % frameCount &&
-                  algorithm === "Clock"
-                }
+                isHand={step?.clockHand === i && algorithm === "Clock"}
               />
             );
           })}
