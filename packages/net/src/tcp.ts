@@ -138,6 +138,8 @@ export interface TcpStep extends StepMeta {
   readonly serverState: TcpState;
   /** The packet in flight this step (absent for timeout/failed steps). */
   readonly packet?: TcpPacket;
+  /** Direction of the packet. Present only when packet is defined. */
+  readonly direction?: "c2s" | "s2c";
   /** True when the packet was dropped by the network. */
   readonly dropped: boolean;
   /** True when this is a retransmission. */
@@ -179,6 +181,7 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
     dropped: boolean,
     retransmit: boolean,
     label: string,
+    direction?: "c2s" | "s2c",
   ): TcpStep {
     const base = {
       phase,
@@ -189,16 +192,30 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
       label,
     } as const;
     if (packet !== undefined) {
-      return { ...base, packet, highlights: [packet.kind] };
+      return {
+        ...base,
+        packet,
+        highlights: [packet.kind],
+        ...(direction !== undefined ? { direction } : {}),
+      };
     }
     return base;
   }
 
-  // Helper: send a packet from client→server with retry logic.
+  function applyTransition(state: TcpState, event: TcpEvent): TcpState {
+    const next = transition(state, event);
+    if (next === null) {
+      throw new Error(`Invalid TCP transition: ${state} + ${event}`);
+    }
+    return next;
+  }
+
+  // Helper: send a packet with retry logic.
   // Returns false if all retries are exhausted.
   function* sendWithRetry(
     phase: TcpPhase,
     packet: TcpPacket,
+    direction: "c2s" | "s2c",
     onDelivered: () => void,
   ): Generator<TcpStep, boolean, void> {
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
@@ -211,6 +228,7 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
           true,
           isRetransmit,
           `${isRetransmit ? "Retransmit " : ""}${packet.kind} dropped`,
+          direction,
         );
         yield makeStep(
           "timeout",
@@ -226,6 +244,7 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
           false,
           isRetransmit,
           `${isRetransmit ? "Retransmit " : ""}${packet.kind} seq=${packet.seq}`,
+          direction,
         );
         onDelivered();
         return true;
@@ -237,12 +256,12 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
   // ── 3-way handshake ──────────────────────────────────────────────────────
 
   // Client: CLOSED → SYN_SENT
-  clientState = "SYN_SENT";
-  serverState = "LISTEN";
+  clientState = applyTransition(clientState, "ACTIVE_OPEN");
+  serverState = applyTransition(serverState, "PASSIVE_OPEN");
 
   const synPacket: TcpPacket = { kind: "SYN", seq: clientSeq, ack: 0 };
-  let ok = yield* sendWithRetry("handshake", synPacket, () => {
-    serverState = "SYN_RCVD";
+  let ok = yield* sendWithRetry("handshake", synPacket, "c2s", () => {
+    serverState = applyTransition(serverState, "SYN");
   });
   if (!ok) {
     yield makeStep(
@@ -261,8 +280,8 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
     seq: serverSeq,
     ack: clientSeq + 1,
   };
-  ok = yield* sendWithRetry("handshake", synAckPacket, () => {
-    clientState = "ESTABLISHED";
+  ok = yield* sendWithRetry("handshake", synAckPacket, "s2c", () => {
+    clientState = applyTransition(clientState, "SYN_ACK");
     serverSeq++;
     clientSeq++;
   });
@@ -283,8 +302,8 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
     seq: clientSeq,
     ack: serverSeq,
   };
-  ok = yield* sendWithRetry("handshake", ackPacket, () => {
-    serverState = "ESTABLISHED";
+  ok = yield* sendWithRetry("handshake", ackPacket, "c2s", () => {
+    serverState = applyTransition(serverState, "ACK");
   });
   if (!ok) {
     yield makeStep(
@@ -306,7 +325,7 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
       ack: serverSeq,
       payload: `segment ${i + 1}`,
     };
-    ok = yield* sendWithRetry("transfer", dataPacket, () => {
+    ok = yield* sendWithRetry("transfer", dataPacket, "c2s", () => {
       clientSeq += 10;
     });
     if (!ok) {
@@ -332,16 +351,17 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
       false,
       false,
       `Server ACK seq=${dataAck.seq} ack=${dataAck.ack}`,
+      "s2c",
     );
   }
 
   // ── 4-way teardown ───────────────────────────────────────────────────────
 
   // Client → FIN
-  clientState = "FIN_WAIT_1";
+  clientState = applyTransition(clientState, "CLOSE");
   const finPacket: TcpPacket = { kind: "FIN", seq: clientSeq, ack: serverSeq };
-  ok = yield* sendWithRetry("teardown", finPacket, () => {
-    serverState = "CLOSE_WAIT";
+  ok = yield* sendWithRetry("teardown", finPacket, "c2s", () => {
+    serverState = applyTransition(serverState, "FIN");
   });
   if (!ok) {
     yield makeStep(
@@ -360,25 +380,26 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
     seq: serverSeq,
     ack: clientSeq + 1,
   };
-  clientState = "FIN_WAIT_2";
+  clientState = applyTransition(clientState, "ACK");
   yield makeStep(
     "teardown",
     finAckFromServer,
     false,
     false,
     `Server ACK of FIN seq=${finAckFromServer.seq}`,
+    "s2c",
   );
   clientSeq++;
 
   // Server → FIN
-  serverState = "LAST_ACK";
+  serverState = applyTransition(serverState, "CLOSE");
   const serverFinPacket: TcpPacket = {
     kind: "FIN",
     seq: serverSeq,
     ack: clientSeq,
   };
-  ok = yield* sendWithRetry("teardown", serverFinPacket, () => {
-    clientState = "TIME_WAIT";
+  ok = yield* sendWithRetry("teardown", serverFinPacket, "s2c", () => {
+    clientState = applyTransition(clientState, "FIN");
   });
   if (!ok) {
     yield makeStep(
@@ -403,8 +424,9 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
     false,
     false,
     `Client final ACK seq=${finalAck.seq}`,
+    "c2s",
   );
-  serverState = "CLOSED";
+  serverState = applyTransition(serverState, "ACK");
 
   // TIME_WAIT → CLOSED
   yield makeStep(
@@ -414,7 +436,7 @@ export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
     false,
     "TIME_WAIT: 2MSL timer — connection fully closed",
   );
-  clientState = "CLOSED";
+  clientState = applyTransition(clientState, "TIMEOUT_2MSL");
 
   yield makeStep("done", undefined, false, false, "Connection closed");
 }

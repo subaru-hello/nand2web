@@ -37,17 +37,11 @@ interface PacketArrowProps {
   index: number;
 }
 
-function PacketArrow({ step, index }: PacketArrowProps) {
-  const { packet, dropped, retransmit, phase } = step;
+function PacketArrow({ step, index: _index }: PacketArrowProps) {
+  const { packet, dropped, retransmit, phase, direction } = step;
   if (!packet) return null;
 
-  const isFromServer =
-    packet.kind === "SYN-ACK" ||
-    (packet.kind === "ACK" &&
-      (phase === "handshake" || phase === "teardown") &&
-      index % 2 === 1) ||
-    (packet.kind === "FIN" && phase === "teardown" && index % 2 === 1) ||
-    (packet.kind === "ACK" && phase === "transfer");
+  const isFromServer = direction === "s2c";
 
   const arrowClass = dropped
     ? "border-red-500/60 text-red-400"

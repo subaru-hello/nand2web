@@ -30,9 +30,9 @@ function NetPage() {
         </h1>
         <p className="max-w-3xl text-zinc-400">
           A name becomes an IP address, an IP address becomes a series of
-          packets, and packets wrap themselves in successive headers — Ethernet
-          inside IP inside TCP inside HTTP — before crossing the wire. Explore
-          the three simulations below to see each mechanism in action.
+          packets, and packets wrap themselves in successive headers — HTTP
+          inside TCP inside IP inside Ethernet — before crossing the wire.
+          Explore the three simulations below to see each mechanism in action.
         </p>
       </header>
 

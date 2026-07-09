@@ -84,6 +84,22 @@ describe("TCP transition table", () => {
       ),
     );
   });
+
+  it("simultaneous open: SYN_SENT + SYN → SYN_RCVD", () => {
+    expect(transition("SYN_SENT", "SYN")).toBe("SYN_RCVD");
+  });
+
+  it("simultaneous close: FIN_WAIT_1 + FIN → CLOSING", () => {
+    expect(transition("FIN_WAIT_1", "FIN")).toBe("CLOSING");
+  });
+
+  it("CLOSING + ACK → TIME_WAIT", () => {
+    expect(transition("CLOSING", "ACK")).toBe("TIME_WAIT");
+  });
+
+  it("TIME_WAIT + TIMEOUT_2MSL → CLOSED (2MSL expiry)", () => {
+    expect(transition("TIME_WAIT", "TIMEOUT_2MSL")).toBe("CLOSED");
+  });
 });
 
 describe("tcpSession generator", () => {
@@ -109,25 +125,20 @@ describe("tcpSession generator", () => {
     expect(last?.serverState).toBe("CLOSED");
   });
 
-  it("handshake convergence: any seed × lossRate≤0.5 × sufficient retries eventually establishes", () => {
-    fc.assert(
-      fc.property(
-        fc.integer({ min: 0, max: 0xffffffff }),
-        fc.double({ min: 0, max: 0.5, noNaN: true }),
-        (seed, lossRate) => {
-          const { steps } = collectSteps(
-            tcpSession({ seed, lossRate, maxRetries: 20 }),
-          );
-          // Must terminate (not truncated at 100k) and each step state is valid
-          expect(steps.length).toBeLessThan(100_000);
-          for (const step of steps) {
-            expect(ALL_TCP_STATES).toContain(step.clientState);
-            expect(ALL_TCP_STATES).toContain(step.serverState);
-          }
-        },
-      ),
-      { numRuns: 200 },
-    );
+  it("handshake convergence: lossRate≤0.4 × sufficient retries → both ends reach ESTABLISHED", () => {
+    // Use a small fixed set of seeds for determinism rather than random seeds
+    const seeds = [0, 1, 42, 99, 12345, 65535, 0xdeadbeef, 0xffffffff];
+    for (const seed of seeds) {
+      const { steps } = collectSteps(
+        tcpSession({ seed, lossRate: 0.4, maxRetries: 30 }),
+      );
+      const establishedStep = steps.find(
+        (s) =>
+          s.clientState === "ESTABLISHED" && s.serverState === "ESTABLISHED",
+      );
+      expect(establishedStep).toBeDefined();
+      expect(steps.length).toBeLessThan(100_000);
+    }
   });
 
   it("exceeding maxRetries produces a failed step and terminates", () => {

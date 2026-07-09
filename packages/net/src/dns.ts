@@ -53,7 +53,7 @@ export interface DnsConfig {
   readonly qtype?: DnsQtype;
   /** When true, the recursive resolver has the answer cached. */
   readonly cacheHit?: boolean;
-  /** When true, only the TLD→authoritative lookup is cached (partial). */
+  /** When true, the root→TLD referral is cached (root skipped, TLD→authoritative still queried). */
   readonly partialCacheHit?: boolean;
 }
 
@@ -137,7 +137,7 @@ export function* dnsResolve(config: DnsConfig): Simulation<DnsStep, string> {
     return answer;
   }
 
-  // Recursive → Root (unless partial cache hit skips this)
+  // Recursive → Root (skipped when root→TLD referral is cached)
   if (!config.partialCacheHit) {
     yield step(
       {
