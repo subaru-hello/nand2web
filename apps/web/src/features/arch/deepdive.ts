@@ -26,7 +26,7 @@ export const archDeepDive: DeepDiveContent = {
       paragraphs: [
         {
           en: "A **data hazard** (RAW — Read After Write) occurs when instruction B needs a value that instruction A is still computing. In the naive pipeline, B would read the register file *before* A has written its result back — getting a stale value. The simplest fix is **stalling**: freeze IF and ID for 2 cycles, letting A advance to WB before B reads. The cost is wasted cycles; the gain is correctness.",
-          ja: "**データハザード**（RAW — 書いた後に読む）は、命令Bが命令Aがまだ計算中の値を必要とするときに起きます。素朴なパイプラインでは、Bはレジスタファイルをよだれを垂らす前に読み出してしまい、古い値を受け取ります。最もシンプルな修正は**ストール**です。IFとIDを2サイクル凍結し、AがWBに進んでからBが読めるようにします。コストは無駄なサイクル、ゲインは正確さです。",
+          ja: "**データハザード**（RAW — 書いた後に読む）は、命令Bが命令Aがまだ計算中の値を必要とするときに起きます。素朴なパイプラインでは、BはAが結果を書き戻す前にレジスタファイルを読み出してしまい、古い値を受け取ります。最もシンプルな修正は**ストール**です。IFとIDを2サイクル凍結し、AがWBに進んでからBが読めるようにします。コストは無駄なサイクル、ゲインは正確さです。",
         },
         {
           en: "**Forwarding** (also called bypassing) is the hardware insight that avoids most stalls: why wait for a result to travel all the way to the register file and back, when you can wire it *directly* from the EX/MEM latch (or MEM/WB latch) into the EX stage's ALU inputs? Two multiplexers and a few comparison wires are all it takes. The only hazard that forwarding cannot fully resolve is **load-use**: after a `lw` instruction, the data comes from memory at the *end* of the MEM stage — too late to forward into the very next instruction's EX. One stall cycle is unavoidable.",
@@ -34,7 +34,7 @@ export const archDeepDive: DeepDiveContent = {
         },
         {
           en: "**Control hazards** arise with branches. Our pipeline uses **predict-not-taken**: keep fetching the next sequential instruction while the branch is evaluated. If the branch is actually taken (EX stage resolves it), the two instructions already in IF and ID are wrong — they get **flushed** (turned into bubbles) and the correct target is fetched. The 2-cycle penalty is the cost of misprediction. Modern processors use sophisticated **branch predictors** that are right 95–99% of the time, making the penalty rare.",
-          ja: "**制御ハザード**は分岐命令で発生します。このパイプラインでは**分岐なしを予測**（predict-not-taken）戦略を使います。分岐がEXステージで解決されるまで、次の順番通りの命令をフェッチし続けます。分岐が実際にタグン（taken）だったとき、IF・IDにいる2つの命令は間違い — **フラッシュ**（バブルに変換）されて正しいターゲットがフェッチされます。2サイクルのペナルティが誤予測のコスト。現代のプロセッサは95〜99%の確率で正解する高度な**分岐予測器**を持ち、このペナルティを稀にします。",
+          ja: "**制御ハザード**は分岐命令で発生します。このパイプラインでは**分岐なしを予測**（predict-not-taken）戦略を使います。分岐がEXステージで解決されるまで、次の順番通りの命令をフェッチし続けます。分岐が実際にテイクン（taken）だったとき、IF・IDにいる2つの命令は間違い — **フラッシュ**（バブルに変換）されて正しいターゲットがフェッチされます。2サイクルのペナルティが誤予測のコスト。現代のプロセッサは95〜99%の確率で正解する高度な**分岐予測器**を持ち、このペナルティを稀にします。",
         },
       ],
     },

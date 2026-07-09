@@ -51,9 +51,11 @@ export function PipelinePlayground() {
   const playback = usePlayback(steps.length, resetKey, false);
 
   // Accumulate all cycles up to cursor into a diagram grid
-  // For the pipeline diagram: rows = instructions (by text), cols = cycles
+  // For the pipeline diagram: rows = instructions (by index), cols = cycles
+  // We keep one row per instruction position so duplicate-text instructions
+  // each get their own row (and a unique index-based key).
   const allInstrTexts = useMemo(
-    () => [...new Set(instructions.map((i) => i.text))],
+    () => instructions.map((i) => i.text),
     [instructions],
   );
 
@@ -150,10 +152,11 @@ export function PipelinePlayground() {
               </tr>
             </thead>
             <tbody>
-              {allInstrTexts.map((txt) => {
+              {allInstrTexts.map((txt, instrIdx) => {
                 const row = grid.get(txt);
                 return (
-                  <tr key={txt}>
+                  // biome-ignore lint/suspicious/noArrayIndexKey: each instruction position is a unique stable row
+                  <tr key={instrIdx}>
                     <td className="pr-2 text-right text-zinc-400">{txt}</td>
                     {Array.from({ length: maxCycle }, (_, i) => {
                       const stage = row?.get(i + 1);

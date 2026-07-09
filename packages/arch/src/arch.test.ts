@@ -16,6 +16,7 @@ import {
   makeAddi,
   makeBeq,
   makeLw,
+  makeSw,
   runPipeline,
 } from "./pipeline.ts";
 
@@ -42,6 +43,12 @@ describe("pipeline — equivalence to sequential interpreter", () => {
   const regArb = fc.integer({ min: 1, max: 7 }); // avoid r0 write
   const immArb = fc.integer({ min: 0, max: 15 });
 
+  // beq offset: positive only (forward branch) in [1,3] so the program always
+  // terminates regardless of program length (max 6 instrs, offset ≤ 3 can never
+  // form a backward loop). A target past the end is safe — the sim and the
+  // sequential interpreter both stop when pc ≥ program length.
+  const beqOffsetArb = fc.integer({ min: 1, max: 3 });
+
   const instrArb = fc.oneof(
     fc.tuple(regArb, regArb, regArb).map(([rd, rs, rt]) => makeAdd(rd, rs, rt)),
     fc
@@ -50,6 +57,12 @@ describe("pipeline — equivalence to sequential interpreter", () => {
     fc
       .tuple(regArb, immArb, fc.integer({ min: 1, max: 3 }))
       .map(([rt, imm, rs]) => makeLw(rt, imm % 4, rs)),
+    fc
+      .tuple(regArb, regArb, beqOffsetArb)
+      .map(([rs, rt, offset]) => makeBeq(rs, rt, offset)),
+    fc
+      .tuple(regArb, immArb, fc.integer({ min: 1, max: 3 }))
+      .map(([rt, imm, rs]) => makeSw(rt, imm % 4, rs)),
   );
 
   const programArb = fc.array(instrArb, { minLength: 1, maxLength: 6 });
@@ -60,7 +73,10 @@ describe("pipeline — equivalence to sequential interpreter", () => {
         const { result } = collectPipeline(prog, "stall");
         const ref = interpretSequential(prog);
         if (!result) return true; // truncated — skip
-        return result.finalRegisters.every((v, i) => v === ref.registers[i]);
+        return (
+          result.finalRegisters.every((v, i) => v === ref.registers[i]) &&
+          result.finalMemory.every((v, i) => v === ref.memory[i])
+        );
       }),
       { numRuns: 200 },
     );
@@ -72,7 +88,10 @@ describe("pipeline — equivalence to sequential interpreter", () => {
         const { result } = collectPipeline(prog, "forwarding");
         const ref = interpretSequential(prog);
         if (!result) return true;
-        return result.finalRegisters.every((v, i) => v === ref.registers[i]);
+        return (
+          result.finalRegisters.every((v, i) => v === ref.registers[i]) &&
+          result.finalMemory.every((v, i) => v === ref.memory[i])
+        );
       }),
       { numRuns: 200 },
     );
@@ -84,7 +103,10 @@ describe("pipeline — equivalence to sequential interpreter", () => {
         const { result: rs } = collectPipeline(prog, "stall");
         const { result: rf } = collectPipeline(prog, "forwarding");
         if (!rs || !rf) return true;
-        return rs.finalRegisters.every((v, i) => v === rf.finalRegisters[i]);
+        return (
+          rs.finalRegisters.every((v, i) => v === rf.finalRegisters[i]) &&
+          rs.finalMemory.every((v, i) => v === rf.finalMemory[i])
+        );
       }),
       { numRuns: 200 },
     );

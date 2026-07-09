@@ -235,6 +235,7 @@ function usesRt(s: Slot): boolean {
  */
 interface IdExLatch {
   slot: Slot;
+  pc: number; // index of this instruction in the program (for branch target calc)
   valRs: number; // resolved rs (from register file or forwarded)
   valRt: number; // resolved rt (from register file or forwarded)
 }
@@ -267,7 +268,8 @@ function* pipelineGen(
 
   // Pipeline latches
   let L_IF_ID: Slot;
-  let L_ID_EX: IdExLatch = { slot: undefined, valRs: 0, valRt: 0 };
+  let ifIdPc = -1; // index in `instructions` of the slot currently in IF/ID
+  let L_ID_EX: IdExLatch = { slot: undefined, pc: -1, valRs: 0, valRt: 0 };
   let L_EX_MEM: ExMemLatch = {
     slot: undefined,
     result: 0,
@@ -490,44 +492,57 @@ function* pipelineGen(
       wrReg: ex_wrReg,
     };
 
-    if (stall) {
+    if (branchTaken) {
+      // Branch resolved in EX: flush IF and ID regardless of any stall.
+      // The stalled instruction in ID is wrong-path — discard it.
+      flushCount++; // one taken-branch event flushes IF and ID
+      // Redirect fetch to branch target: PC-relative from instruction after beq
+      fetchPc = L_ID_EX.pc + 1 + (isReal(ex_slot) ? ex_slot.imm : 0);
+      // Flush: the instructions in IF and ID are squashed (become bubbles)
+      L_ID_EX = { slot: null, pc: -1, valRs: 0, valRt: 0 }; // ID flush
+      ifIdPc = -1;
+      L_IF_ID = null; // IF flush
+    } else if (stall) {
       stallCount++;
       // Stall: freeze IF/ID and ID/EX. Insert bubble into ID/EX next cycle
       // so that EX gets a bubble while the stalled instruction waits.
       // We do this by squashing only the L_ID_EX (the stalled instruction
       // stays in L_IF_ID and will re-enter ID next cycle).
-      L_ID_EX = { slot: null, valRs: 0, valRt: 0 }; // bubble into EX next cycle
+      L_ID_EX = { slot: null, pc: -1, valRs: 0, valRt: 0 }; // bubble into EX next cycle
       // L_IF_ID stays (stalled instruction re-presented to ID next cycle)
     } else {
-      // ID/EX ← IF/ID (with register file read), or bubble if branch flushed
-      if (branchTaken) {
-        flushCount++;
-        // Flush: the instructions in IF and ID are squashed (become bubbles)
-        L_ID_EX = { slot: null, valRs: 0, valRt: 0 }; // ID flush
-        L_IF_ID = null; // IF flush
+      // ID/EX ← IF/ID (with register file read)
+      if (isReal(L_IF_ID)) {
+        // Register file read at ID stage
+        L_ID_EX = {
+          slot: L_IF_ID,
+          pc: ifIdPc,
+          valRs: readReg(L_IF_ID.rs),
+          valRt: readReg(L_IF_ID.rt),
+        };
       } else {
-        if (isReal(L_IF_ID)) {
-          // Register file read at ID stage
-          L_ID_EX = {
-            slot: L_IF_ID,
-            valRs: readReg(L_IF_ID.rs),
-            valRt: readReg(L_IF_ID.rt),
-          };
-        } else {
-          L_ID_EX = { slot: L_IF_ID, valRs: 0, valRt: 0 };
-        }
-        // IF/ID ← next fetch
-        if (fetchPc < instructions.length) {
-          L_IF_ID = instructions[fetchPc] ?? undefined;
-          fetchPc++;
-        } else {
-          L_IF_ID = undefined;
-        }
+        L_ID_EX = { slot: L_IF_ID, pc: ifIdPc, valRs: 0, valRt: 0 };
+      }
+      // IF/ID ← next fetch
+      if (fetchPc < instructions.length) {
+        ifIdPc = fetchPc;
+        L_IF_ID = instructions[fetchPc] ?? undefined;
+        fetchPc++;
+      } else {
+        ifIdPc = -1;
+        L_IF_ID = undefined;
       }
     }
 
-    // Done when all real instructions have committed in WB
-    if (instructionsDone >= totalInstructions) break;
+    // Done when all non-flushed instructions have retired (pipeline drained)
+    // Check: pipeline is empty (all latches have no real instruction) and fetch is past end
+    const pipelineDrained =
+      !isReal(L_IF_ID) &&
+      !isReal(L_ID_EX.slot) &&
+      !isReal(L_EX_MEM.slot) &&
+      !isReal(L_MEM_WB.slot) &&
+      fetchPc >= instructions.length;
+    if (pipelineDrained) break;
 
     // Safety
     if (cycle > totalInstructions * 15 + 20) break;
