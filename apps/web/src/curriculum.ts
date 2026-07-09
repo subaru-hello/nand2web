@@ -106,7 +106,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Process Scheduling",
         description:
           "FCFS, SJF, Round-Robin, and MLFQ on the same workload — Gantt charts and waiting-time comparisons included.",
-        status: "planned",
+        status: "done",
+        route: "/os",
         topics: ["FCFS / SJF / RR / MLFQ", "turnaround & waiting time"],
       },
       {
@@ -114,7 +115,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Virtual Memory",
         description:
           "Follow a virtual address through the page table walk, trigger page faults, and race FIFO vs. LRU vs. Clock replacement.",
-        status: "planned",
+        status: "done",
+        route: "/os",
         topics: ["paging", "page faults", "replacement policies"],
       },
     ],
