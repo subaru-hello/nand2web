@@ -201,7 +201,27 @@ export const curriculum: readonly CurriculumLayer[] = [
   },
 ];
 
+/** Review layer — spaced-repetition quiz across all domains. */
+export const reviewLayer: CurriculumLayer = {
+  order: 0,
+  id: "review",
+  title: "Spaced Repetition Review",
+  subtitle: "Reinforce everything you've learned",
+  modules: [
+    {
+      id: "quiz",
+      title: "Quiz",
+      description:
+        "Flash cards spanning all seven simulator domains — logic, CPU, arch, OS, compilers, networking, and algorithms — scheduled by the SM-2 spaced-repetition algorithm.",
+      status: "done",
+      route: "/quiz",
+      topics: ["spaced repetition", "SM-2", "all domains"],
+    },
+  ],
+};
+
 /** Layers ordered for display: highest abstraction on top, NAND at the bottom. */
-export const layersTopDown: readonly CurriculumLayer[] = [...curriculum].sort(
-  (a, b) => b.order - a.order,
-);
+export const layersTopDown: readonly CurriculumLayer[] = [
+  ...curriculum,
+  reviewLayer,
+].sort((a, b) => b.order - a.order);

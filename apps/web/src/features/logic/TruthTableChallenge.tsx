@@ -35,7 +35,7 @@ export function TruthTableChallenge({
 
   useEffect(() => {
     if (solved) {
-      markCompleted(lessonId);
+      void markCompleted(lessonId);
     }
   }, [solved, lessonId]);
 
