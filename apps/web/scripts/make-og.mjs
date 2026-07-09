@@ -7,9 +7,10 @@
  * Do NOT add this to any build or CI step. Run manually when the design changes.
  * Requires: @playwright/test chromium browser installed (pnpm install already handles this).
  */
-import { chromium } from "@playwright/test";
-import { fileURLToPath } from "node:url";
+
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { chromium } from "@playwright/test";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.resolve(__dirname, "../public/og.png");
@@ -120,7 +121,11 @@ const browser = await chromium.launch();
 const page = await browser.newPage();
 await page.setViewportSize({ width: 1200, height: 630 });
 await page.setContent(html, { waitUntil: "networkidle" });
-await page.screenshot({ path: OUT, type: "png", clip: { x: 0, y: 0, width: 1200, height: 630 } });
+await page.screenshot({
+  path: OUT,
+  type: "png",
+  clip: { x: 0, y: 0, width: 1200, height: 630 },
+});
 await browser.close();
 
 console.log(`OG image written to ${OUT}`);

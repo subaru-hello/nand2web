@@ -1,4 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="nand2web">
+  <title>nand2web</title>
   <!-- zinc-950 background -->
   <rect width="32" height="32" rx="6" fill="#09090b"/>
   <!-- NAND gate glyph: flat-left body + arc right + bubble -->

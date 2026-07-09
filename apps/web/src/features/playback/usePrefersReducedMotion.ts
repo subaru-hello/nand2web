@@ -10,9 +10,7 @@ const QUERY = "(prefers-reduced-motion: reduce)";
 export function usePrefersReducedMotion(): boolean {
   const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean>(
     () =>
-      typeof window !== "undefined"
-        ? window.matchMedia(QUERY).matches
-        : false,
+      typeof window !== "undefined" ? window.matchMedia(QUERY).matches : false,
   );
 
   useEffect(() => {
