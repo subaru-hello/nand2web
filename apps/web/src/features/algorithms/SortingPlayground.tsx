@@ -50,13 +50,13 @@ function barColor(
   inputLength: number,
 ): string {
   if (!step) return "bg-zinc-600";
-  const sorted = step.sortedUpTo ?? 0;
-  if (index >= sorted && sorted === inputLength) return "bg-emerald-500";
-  if (index >= sorted && sorted > 0) return "bg-emerald-500";
+  // Priority: active compare/write first, then sorted membership, then default.
   if (step.compare && (step.compare[0] === index || step.compare[1] === index))
     return "bg-yellow-400";
   if (step.write?.some((w) => w.index === index)) return "bg-red-500";
-  if (index < sorted) return "bg-emerald-500";
+  if (step.sortedIndices?.includes(index)) return "bg-emerald-500";
+  // All indices sorted when sortedIndices covers the whole array
+  if ((step.sortedIndices?.length ?? 0) === inputLength) return "bg-emerald-500";
   return "bg-zinc-600";
 }
 
@@ -184,7 +184,7 @@ export function SortingPlayground() {
           const heightPct = (val / maxVal) * 100;
           return (
             <div
-              key={val}
+              key={position}
               className={`flex-1 rounded-sm transition-all duration-75 ${color}`}
               style={{ height: `${heightPct}%`, minHeight: "2px" }}
               title={`[${position}] = ${val}`}

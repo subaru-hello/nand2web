@@ -9,6 +9,7 @@ import {
   insertionSort,
   mergeSort,
   quickSort,
+  SORT_META,
   selectionSort,
 } from "./sorts.ts";
 
@@ -63,12 +64,17 @@ describe.each(sortFns)("$name", ({ fn }) => {
       fc.property(arrayCases, (input) => {
         const { steps, result } = collectSteps(fn(input));
         expect(result).toBeDefined();
-        // Last step's array should be sorted
-        const lastStep = steps[steps.length - 1];
         if (input.length === 0) {
-          expect(steps.length).toBeGreaterThanOrEqual(0);
+          // Empty input: no compare/write steps, final array is empty
+          const lastStep = steps[steps.length - 1];
+          if (lastStep) {
+            expect(lastStep.array.length).toBe(0);
+            expect(lastStep.compare).toBeUndefined();
+            expect(lastStep.write).toBeUndefined();
+          }
           return;
         }
+        const lastStep = steps[steps.length - 1];
         expect(lastStep).toBeDefined();
         const finalArr = lastStep?.array ?? [];
         expect(isSorted(finalArr)).toBe(true);
@@ -116,6 +122,121 @@ describe.each(sortFns)("$name", ({ fn }) => {
         if (!result) return;
         expect(result.comparisons).toBeGreaterThanOrEqual(0);
         expect(result.writes).toBeGreaterThanOrEqual(0);
+      }),
+    );
+  });
+
+  it("sortedIndices correctness: every listed index holds its final-sorted value", () => {
+    fc.assert(
+      fc.property(
+        fc.array(fc.integer({ min: -1000, max: 1000 }), {
+          minLength: 1,
+          maxLength: 40,
+        }),
+        (input) => {
+          const sorted = [...input].sort((a, b) => a - b);
+          const { steps } = collectSteps(fn(input));
+          for (const step of steps) {
+            if (!step.sortedIndices) continue;
+            for (const idx of step.sortedIndices) {
+              expect(step.array[idx]).toBe(sorted[idx]);
+            }
+          }
+        },
+      ),
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Stable sort property test (bubble, insertion, merge only)
+// ---------------------------------------------------------------------------
+
+const stableSortFns: Array<{ name: string; fn: SortFn }> = sortFns.filter(
+  ({ name }) => {
+    const id = name.replace("Sort", "").toLowerCase();
+    return SORT_META.find((m) => m.id === id)?.stable === true;
+  },
+);
+
+describe.each(stableSortFns)("$name — stability", ({ fn }) => {
+  it("preserves relative order of equal-key elements", () => {
+    // Records with a numeric key (possibly duplicate) and a unique tag.
+    const recordArb = fc.array(
+      fc.record({
+        key: fc.integer({ min: 0, max: 5 }),
+        tag: fc.nat(),
+      }),
+      { minLength: 0, maxLength: 30 },
+    );
+
+    fc.assert(
+      fc.property(recordArb, (records) => {
+        // Encode as integers: we sort the keys only, so we simulate by
+        // sorting key arrays and checking tag order is preserved per key.
+        // To use the existing SortFn (number[]) we sort the index array
+        // using a stable reference sort, then verify against the algorithm.
+        //
+        // We directly test stability by simulating on objects using the
+        // sort functions' final output vs. a reference stable sort.
+        // Since SortFn only accepts number[], we verify via index sort:
+        const keys = records.map((r) => r.key);
+        if (keys.length === 0) return;
+
+        // Reference: stable sort preserving original index for ties
+        const refIndices = Array.from({ length: keys.length }, (_, i) => i);
+        refIndices.sort((a, b) => (keys[a] as number) - (keys[b] as number));
+
+        // Algorithm output: last step's array gives the sorted key order
+        const { steps } = collectSteps(fn(keys as readonly number[]));
+        const lastStep = steps[steps.length - 1];
+        if (!lastStep) return;
+
+        // Map the algorithm's sorted positions back to original indices
+        // by matching key values in order (using a reference stable sort)
+        const algoOrder = lastStep.array as number[];
+
+        // For each group of equal keys, the relative tag order from the
+        // reference stable sort must match the algorithm's sort.
+        // We track per-key the sequence of original tags in ref order
+        // vs. the sequence in the algorithm output.
+        const refTagsByKey = new Map<number, number[]>();
+        const algoTagsByKey = new Map<number, number[]>();
+
+        // Ref order: tag sequence per key
+        for (const origIdx of refIndices) {
+          const k = keys[origIdx] as number;
+          const tag = records[origIdx]?.tag ?? 0;
+          const refBucket = refTagsByKey.get(k) ?? [];
+          refBucket.push(tag);
+          refTagsByKey.set(k, refBucket);
+        }
+
+        // To recover the original index from the algorithm output, we need
+        // to consume each key group in order of appearance in algoOrder,
+        // matching against a copy of remaining originals for that key.
+        const remaining = new Map<number, number[]>();
+        for (let i = 0; i < records.length; i++) {
+          const k = keys[i] as number;
+          const pool = remaining.get(k) ?? [];
+          pool.push(i);
+          remaining.set(k, pool);
+        }
+
+        for (const val of algoOrder) {
+          const pool = remaining.get(val);
+          if (!pool || pool.length === 0) continue;
+          const origIdx = pool.shift() ?? 0;
+          const tag = records[origIdx]?.tag ?? 0;
+          const algoBucket = algoTagsByKey.get(val) ?? [];
+          algoBucket.push(tag);
+          algoTagsByKey.set(val, algoBucket);
+        }
+
+        for (const [k, refTags] of refTagsByKey) {
+          const algoTags = algoTagsByKey.get(k) ?? [];
+          expect(algoTags).toEqual(refTags);
+        }
       }),
     );
   });

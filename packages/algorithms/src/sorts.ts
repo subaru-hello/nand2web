@@ -14,8 +14,12 @@ export interface SortStep {
     readonly index: number;
     readonly value: number;
   }[];
-  /** Everything at index < sortedUpTo is in its final sorted position. */
-  readonly sortedUpTo?: number;
+  /**
+   * Set of indices whose elements are in their final sorted position.
+   * The element at each listed index equals the element at that index
+   * in the fully-sorted result.
+   */
+  readonly sortedIndices?: readonly number[];
   readonly meta: StepMeta;
 }
 
@@ -106,6 +110,13 @@ export const SORT_META: readonly SortMeta[] = [
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Build a sorted-indices array for indices [start, end) (a prefix or suffix). */
+function indexRange(start: number, end: number): number[] {
+  const result: number[] = [];
+  for (let i = start; i < end; i++) result.push(i);
+  return result;
+}
+
 /** Emit a compare step, incrementing the counter. */
 function* emitCompare(
   arr: number[],
@@ -113,13 +124,13 @@ function* emitCompare(
   j: number,
   label: string,
   comparisons: { n: number },
-  sortedUpTo?: number,
+  sortedIndices?: readonly number[],
 ): Generator<SortStep, void, void> {
   comparisons.n++;
   yield {
     array: [...arr],
     compare: [i, j],
-    ...(sortedUpTo !== undefined ? { sortedUpTo } : {}),
+    ...(sortedIndices !== undefined ? { sortedIndices } : {}),
     meta: { label, highlights: [String(i), String(j)] },
   };
 }
@@ -130,7 +141,7 @@ function* emitWrite(
   writes: readonly { index: number; value: number }[],
   label: string,
   writeCounter: { n: number },
-  sortedUpTo?: number,
+  sortedIndices?: readonly number[],
 ): Generator<SortStep, void, void> {
   writeCounter.n += writes.length;
   for (const w of writes) {
@@ -139,7 +150,7 @@ function* emitWrite(
   yield {
     array: [...arr],
     write: writes,
-    ...(sortedUpTo !== undefined ? { sortedUpTo } : {}),
+    ...(sortedIndices !== undefined ? { sortedIndices } : {}),
     meta: {
       label,
       highlights: writes.map((w) => String(w.index)),
@@ -160,6 +171,8 @@ export function* bubbleSort(
   const wrt = { n: 0 };
 
   for (let pass = 0; pass < n - 1; pass++) {
+    // After pass, the last `pass` elements are in their final positions (suffix).
+    const settled = indexRange(n - pass, n);
     let swapped = false;
     for (let i = 0; i < n - 1 - pass; i++) {
       yield* emitCompare(
@@ -168,7 +181,7 @@ export function* bubbleSort(
         i + 1,
         `Compare [${i}] and [${i + 1}]`,
         cmp,
-        n - pass,
+        settled,
       );
       if ((arr[i] as number) > (arr[i + 1] as number)) {
         const a = arr[i] as number;
@@ -181,7 +194,7 @@ export function* bubbleSort(
           ],
           `Swap [${i}] ↔ [${i + 1}]`,
           wrt,
-          n - pass,
+          settled,
         );
         swapped = true;
       }
@@ -190,7 +203,11 @@ export function* bubbleSort(
   }
 
   // Final state — fully sorted
-  yield { array: [...arr], sortedUpTo: n, meta: { label: "Sorted" } };
+  yield {
+    array: [...arr],
+    sortedIndices: indexRange(0, n),
+    meta: { label: "Sorted" },
+  };
   return { comparisons: cmp.n, writes: wrt.n };
 }
 
@@ -206,18 +223,20 @@ export function* insertionSort(
   const cmp = { n: 0 };
   const wrt = { n: 0 };
 
+  // Insertion sort: the prefix [0, i) is relatively ordered, but not
+  // necessarily in final positions, so we do NOT mark anything as sorted
+  // during intermediate steps.
   for (let i = 1; i < n; i++) {
     const key = arr[i] as number;
     let j = i - 1;
     while (j >= 0) {
-      yield* emitCompare(arr, j, i, `Compare [${j}] and key ${key}`, cmp, i);
+      yield* emitCompare(arr, j, i, `Compare [${j}] and key ${key}`, cmp);
       if ((arr[j] as number) > key) {
         yield* emitWrite(
           arr,
           [{ index: j + 1, value: arr[j] as number }],
           `Shift [${j}] right`,
           wrt,
-          i,
         );
         j--;
       } else {
@@ -229,11 +248,14 @@ export function* insertionSort(
       [{ index: j + 1, value: key }],
       `Insert key ${key} at [${j + 1}]`,
       wrt,
-      i + 1,
     );
   }
 
-  yield { array: [...arr], sortedUpTo: n, meta: { label: "Sorted" } };
+  yield {
+    array: [...arr],
+    sortedIndices: indexRange(0, n),
+    meta: { label: "Sorted" },
+  };
   return { comparisons: cmp.n, writes: wrt.n };
 }
 
@@ -250,6 +272,8 @@ export function* selectionSort(
   const wrt = { n: 0 };
 
   for (let i = 0; i < n - 1; i++) {
+    // Prefix [0, i) is in final positions.
+    const settled = indexRange(0, i);
     let minIdx = i;
     for (let j = i + 1; j < n; j++) {
       yield* emitCompare(
@@ -258,12 +282,14 @@ export function* selectionSort(
         minIdx,
         `Compare [${j}] and min [${minIdx}]`,
         cmp,
-        i,
+        settled,
       );
       if ((arr[j] as number) < (arr[minIdx] as number)) {
         minIdx = j;
       }
     }
+    // After finding the minimum, place it at i — now prefix [0, i+1) is settled.
+    const newSettled = indexRange(0, i + 1);
     if (minIdx !== i) {
       const a = arr[i] as number;
       const b = arr[minIdx] as number;
@@ -275,19 +301,23 @@ export function* selectionSort(
         ],
         `Swap min [${minIdx}] to [${i}]`,
         wrt,
-        i + 1,
+        newSettled,
       );
     } else {
       // No swap needed but position is now settled — emit a step showing it
       yield {
         array: [...arr],
-        sortedUpTo: i + 1,
+        sortedIndices: newSettled,
         meta: { label: `[${i}] already minimum`, highlights: [String(i)] },
       };
     }
   }
 
-  yield { array: [...arr], sortedUpTo: n, meta: { label: "Sorted" } };
+  yield {
+    array: [...arr],
+    sortedIndices: indexRange(0, n),
+    meta: { label: "Sorted" },
+  };
   return { comparisons: cmp.n, writes: wrt.n };
 }
 
@@ -304,7 +334,11 @@ export function* mergeSort(
 
   yield* mergeSortRange(arr, 0, arr.length - 1, cmp, wrt);
 
-  yield { array: [...arr], sortedUpTo: arr.length, meta: { label: "Sorted" } };
+  yield {
+    array: [...arr],
+    sortedIndices: indexRange(0, arr.length),
+    meta: { label: "Sorted" },
+  };
   return { comparisons: cmp.n, writes: wrt.n };
 }
 
@@ -403,10 +437,16 @@ export function* quickSort(
   const arr = [...input];
   const cmp = { n: 0 };
   const wrt = { n: 0 };
+  // Track pivot indices as they are placed in their final positions.
+  const confirmedPivots: number[] = [];
 
-  yield* quickSortRange(arr, 0, arr.length - 1, cmp, wrt);
+  yield* quickSortRange(arr, 0, arr.length - 1, cmp, wrt, confirmedPivots);
 
-  yield { array: [...arr], sortedUpTo: arr.length, meta: { label: "Sorted" } };
+  yield {
+    array: [...arr],
+    sortedIndices: indexRange(0, arr.length),
+    meta: { label: "Sorted" },
+  };
   return { comparisons: cmp.n, writes: wrt.n };
 }
 
@@ -416,11 +456,12 @@ function* quickSortRange(
   hi: number,
   cmp: { n: number },
   wrt: { n: number },
+  confirmedPivots: number[],
 ): Generator<SortStep, void, void> {
   if (lo >= hi) return;
-  const pivotIdx = yield* partition(arr, lo, hi, cmp, wrt);
-  yield* quickSortRange(arr, lo, pivotIdx - 1, cmp, wrt);
-  yield* quickSortRange(arr, pivotIdx + 1, hi, cmp, wrt);
+  const pivotIdx = yield* partition(arr, lo, hi, cmp, wrt, confirmedPivots);
+  yield* quickSortRange(arr, lo, pivotIdx - 1, cmp, wrt, confirmedPivots);
+  yield* quickSortRange(arr, pivotIdx + 1, hi, cmp, wrt, confirmedPivots);
 }
 
 function* partition(
@@ -429,6 +470,7 @@ function* partition(
   hi: number,
   cmp: { n: number },
   wrt: { n: number },
+  confirmedPivots: number[],
 ): Generator<SortStep, number, void> {
   // Median-of-three pivot selection to avoid worst-case on sorted input
   const mid = (lo + hi) >> 1;
@@ -482,6 +524,7 @@ function* partition(
       hi,
       `Compare [${i}]=${arr[i]} with pivot ${pivot}`,
       cmp,
+      confirmedPivots.length > 0 ? [...confirmedPivots] : undefined,
     );
     if ((arr[i] as number) <= pivot) {
       if (storeIdx !== i) {
@@ -495,13 +538,14 @@ function* partition(
           ],
           `Swap [${storeIdx}] ↔ [${i}]`,
           wrt,
+          confirmedPivots.length > 0 ? [...confirmedPivots] : undefined,
         );
       }
       storeIdx++;
     }
   }
 
-  // Place pivot
+  // Place pivot — storeIdx is now in its final position
   if (storeIdx !== hi) {
     const a = arr[storeIdx] as number;
     const b = arr[hi] as number;
@@ -515,6 +559,17 @@ function* partition(
       wrt,
     );
   }
+  confirmedPivots.push(storeIdx);
+
+  // Emit a step announcing the pivot is in its final position
+  yield {
+    array: [...arr],
+    sortedIndices: [...confirmedPivots],
+    meta: {
+      label: `Pivot ${pivot} settled at [${storeIdx}]`,
+      highlights: [String(storeIdx)],
+    },
+  };
 
   return storeIdx;
 }
@@ -536,11 +591,14 @@ export function* heapSort(
     yield* heapSiftDown(arr, i, n, cmp, wrt);
   }
 
-  // Extract elements
+  // Extract elements — after each extraction the last `n - end` elements
+  // are in their final positions (suffix).
   for (let end = n - 1; end > 0; end--) {
     // Swap root (max) with last unsorted element
     const rootVal = arr[0] as number;
     const endVal = arr[end] as number;
+    // After this write, index `end` is settled; suffix [end, n) is done.
+    const settled = indexRange(end, n);
     yield* emitWrite(
       arr,
       [
@@ -549,12 +607,16 @@ export function* heapSort(
       ],
       `Place max ${rootVal} at [${end}]`,
       wrt,
-      end + 1,
+      settled,
     );
     yield* heapSiftDown(arr, 0, end, cmp, wrt);
   }
 
-  yield { array: [...arr], sortedUpTo: n, meta: { label: "Sorted" } };
+  yield {
+    array: [...arr],
+    sortedIndices: indexRange(0, n),
+    meta: { label: "Sorted" },
+  };
   return { comparisons: cmp.n, writes: wrt.n };
 }
 
