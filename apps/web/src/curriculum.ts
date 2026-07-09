@@ -171,7 +171,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Sorting Suite",
         description:
           "Six sorting algorithms, live operation counters, adversarial input distributions, and head-to-head race mode.",
-        status: "planned",
+        status: "done",
+        route: "/algorithms",
         topics: ["comparison sorts", "complexity in practice"],
       },
       {
