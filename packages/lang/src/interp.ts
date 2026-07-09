@@ -16,7 +16,7 @@ export interface InterpState {
   readonly activeId: number;
   /** Human-readable description of the current step. */
   readonly label: string;
-  /** All variables in scope. */
+  /** All variables in scope (flattened — child scopes shadow parents). */
   readonly env: Env;
   /** Lines printed so far. */
   readonly output: readonly string[];
@@ -44,8 +44,71 @@ export function* interpret(
 ): Simulation<InterpStep, InterpState> {
   const limit = options?.stepLimit ?? DEFAULT_STEP_LIMIT;
   let steps = 0;
-  let env: Map<string, number> = new Map();
   const output: string[] = [];
+
+  // ── Scope chain ─────────────────────────────────────────────────────────────
+  // Each scope frame holds its own bindings plus a reference to its parent.
+  interface ScopeFrame {
+    bindings: Map<string, number>;
+    parent: ScopeFrame | null;
+  }
+
+  let currentScope: ScopeFrame = { bindings: new Map(), parent: null };
+
+  /** Look up a variable name through the scope chain. */
+  function scopeLookup(name: string): number | undefined {
+    let frame: ScopeFrame | null = currentScope;
+    while (frame !== null) {
+      const v = frame.bindings.get(name);
+      if (v !== undefined) {
+        return v;
+      }
+      frame = frame.parent;
+    }
+    return undefined;
+  }
+
+  /**
+   * Assign to an existing variable anywhere in the scope chain.
+   * Returns false if not found.
+   */
+  function scopeAssign(name: string, value: number): boolean {
+    let frame: ScopeFrame | null = currentScope;
+    while (frame !== null) {
+      if (frame.bindings.has(name)) {
+        frame.bindings.set(name, value);
+        return true;
+      }
+      frame = frame.parent;
+    }
+    return false;
+  }
+
+  /** Declare a new variable in the current (innermost) scope. */
+  function scopeDeclare(name: string, value: number): void {
+    currentScope.bindings.set(name, value);
+  }
+
+  /** Flatten the scope chain into a Map for UI display (child shadows parent). */
+  function flattenScope(): Map<string, number> {
+    const frames: ScopeFrame[] = [];
+    let frame: ScopeFrame | null = currentScope;
+    while (frame !== null) {
+      frames.push(frame);
+      frame = frame.parent;
+    }
+    // Build from outermost to innermost so inner bindings shadow outer.
+    const flat = new Map<string, number>();
+    for (let i = frames.length - 1; i >= 0; i--) {
+      const f = frames[i];
+      if (f !== undefined) {
+        for (const [k, v] of f.bindings) {
+          flat.set(k, v);
+        }
+      }
+    }
+    return flat;
+  }
 
   const snapshot = (
     activeId: number,
@@ -55,7 +118,7 @@ export function* interpret(
   ): InterpState => ({
     activeId,
     label,
-    env: new Map(env),
+    env: flattenScope(),
     output: [...output],
     status,
     errorMessage,
@@ -86,7 +149,7 @@ export function* interpret(
         return e.value;
 
       case "Var": {
-        const val = env.get(e.name);
+        const val = scopeLookup(e.name);
         if (val === undefined) {
           yield snapshot(
             e.id,
@@ -172,8 +235,7 @@ export function* interpret(
         if (v === undefined) {
           return false;
         }
-        env = new Map(env);
-        env.set(s.name, v);
+        scopeDeclare(s.name, v);
         return true;
       }
 
@@ -182,8 +244,15 @@ export function* interpret(
         if (v === undefined) {
           return false;
         }
-        env = new Map(env);
-        env.set(s.name, v);
+        if (!scopeAssign(s.name, v)) {
+          yield snapshot(
+            s.id,
+            `assignment to undeclared variable '${s.name}'`,
+            "error",
+            `Assignment to undeclared variable '${s.name}'`,
+          );
+          return false;
+        }
         return true;
       }
 
@@ -231,13 +300,21 @@ export function* interpret(
   };
 
   const execBlock = function* (b: Block): Generator<InterpStep, boolean, void> {
-    for (const stmt of b.stmts) {
-      const ok = yield* execStmt(stmt);
-      if (!ok) {
-        return false;
+    // Push a new scope frame on block entry.
+    const saved = currentScope;
+    currentScope = { bindings: new Map(), parent: saved };
+    try {
+      for (const stmt of b.stmts) {
+        const ok = yield* execStmt(stmt);
+        if (!ok) {
+          return false;
+        }
       }
+      return true;
+    } finally {
+      // Pop back to the parent scope on block exit (error or normal).
+      currentScope = saved;
     }
-    return true;
   };
 
   // Main loop

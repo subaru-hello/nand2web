@@ -218,6 +218,40 @@ describe("printer", () => {
           stmts: stmts as Stmt[],
         }),
       ),
+      // IfStmt (with optional else branch)
+      fc
+        .tuple(
+          exprArb,
+          fc.array(tie("stmt"), { maxLength: 2 }),
+          fc.option(fc.array(tie("stmt"), { maxLength: 2 })),
+        )
+        .map(([cond, thenStmts, elseStmts]): Stmt => {
+          const thenBlock: Block = {
+            kind: "Block",
+            id: 0,
+            stmts: thenStmts as Stmt[],
+          };
+          const elseBlock: Block | undefined = elseStmts
+            ? { kind: "Block", id: 0, stmts: elseStmts as Stmt[] }
+            : undefined;
+          return {
+            kind: "IfStmt",
+            id: 0,
+            cond,
+            // biome-ignore lint/suspicious/noThenProperty: "then" is an AST field, not a Promise method
+            then: thenBlock,
+            else_: elseBlock,
+          };
+        }),
+      // WhileStmt
+      fc
+        .tuple(exprArb, fc.array(tie("stmt"), { maxLength: 2 }))
+        .map(([cond, bodyStmts]): Stmt => ({
+          kind: "WhileStmt",
+          id: 0,
+          cond,
+          body: { kind: "Block", id: 0, stmts: bodyStmts as Stmt[] },
+        })),
     ),
   })).stmt as fc.Arbitrary<Stmt>;
 
@@ -328,6 +362,36 @@ describe("interpreter", () => {
     const prog = parse(tokens);
     const { result: final } = collectSteps(interpret(prog, { stepLimit: 100 }));
     expect(final?.status).toBe("limit");
+  });
+
+  it("block scope: variable declared inside block does not leak out", () => {
+    const { final } = run("if (1) { let leaked = 99; } print leaked;");
+    expect(final.status).toBe("error");
+    expect(final.errorMessage).toMatch(/leaked/i);
+  });
+
+  it("block scope: outer variable is visible inside block", () => {
+    expect(finalOutput("let x = 10; if (1) { print x; }")).toEqual(["10"]);
+  });
+
+  it("block scope: assignment inside block updates outer variable", () => {
+    expect(finalOutput("let x = 1; if (1) { x = 42; } print x;")).toEqual(["42"]);
+  });
+
+  it("block scope: while loop body does not leak let bindings", () => {
+    const { final } = run("let n = 1; while (n > 0) { let tmp = n; n = n - 1; } print tmp;");
+    expect(final.status).toBe("error");
+  });
+
+  it("undeclared assignment yields error status", () => {
+    const { final } = run("x = 5;");
+    expect(final.status).toBe("error");
+    expect(final.errorMessage).toMatch(/undeclared/i);
+  });
+
+  it("undeclared assignment error message contains variable name", () => {
+    const { final } = run("foo = 1;");
+    expect(final.errorMessage).toMatch(/foo/);
   });
 
   it("each step carries a full env snapshot (GCD)", () => {
