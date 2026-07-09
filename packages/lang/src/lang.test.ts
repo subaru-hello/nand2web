@@ -244,14 +244,14 @@ describe("printer", () => {
           };
         }),
       // WhileStmt
-      fc
-        .tuple(exprArb, fc.array(tie("stmt"), { maxLength: 2 }))
-        .map(([cond, bodyStmts]): Stmt => ({
+      fc.tuple(exprArb, fc.array(tie("stmt"), { maxLength: 2 })).map(
+        ([cond, bodyStmts]): Stmt => ({
           kind: "WhileStmt",
           id: 0,
           cond,
           body: { kind: "Block", id: 0, stmts: bodyStmts as Stmt[] },
-        })),
+        }),
+      ),
     ),
   })).stmt as fc.Arbitrary<Stmt>;
 
@@ -375,11 +375,15 @@ describe("interpreter", () => {
   });
 
   it("block scope: assignment inside block updates outer variable", () => {
-    expect(finalOutput("let x = 1; if (1) { x = 42; } print x;")).toEqual(["42"]);
+    expect(finalOutput("let x = 1; if (1) { x = 42; } print x;")).toEqual([
+      "42",
+    ]);
   });
 
   it("block scope: while loop body does not leak let bindings", () => {
-    const { final } = run("let n = 1; while (n > 0) { let tmp = n; n = n - 1; } print tmp;");
+    const { final } = run(
+      "let n = 1; while (n > 0) { let tmp = n; n = n - 1; } print tmp;",
+    );
     expect(final.status).toBe("error");
   });
 

@@ -103,4 +103,3 @@ export interface Program {
   readonly kind: "Program";
   readonly stmts: readonly Stmt[];
 }
-
