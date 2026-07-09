@@ -82,7 +82,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Pipelining & Hazards",
         description:
           "A 5-stage pipeline with data and control hazards. Compare stalling against forwarding and count the cycles.",
-        status: "planned",
+        status: "done",
+        route: "/arch",
         topics: ["IF/ID/EX/MEM/WB", "hazards", "forwarding"],
       },
       {
@@ -90,7 +91,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Cache Hierarchy",
         description:
           "Direct-mapped vs. set-associative caches. Replay access patterns and watch hit rates change.",
-        status: "planned",
+        status: "done",
+        route: "/arch",
         topics: ["locality", "associativity", "LRU"],
       },
     ],
