@@ -1,0 +1,420 @@
+/**
+ * TCP state machine and session simulation.
+ *
+ * The state machine is encoded as an explicit transition table so it is
+ * trivially testable with model-based property tests: every event × state
+ * pair either names a target state or returns null (invalid transition).
+ */
+
+import type { Simulation, StepMeta } from "@nand2web/sim-core";
+import { createRng } from "@nand2web/sim-core";
+
+// ── State & event types ────────────────────────────────────────────────────
+
+export type TcpState =
+  | "CLOSED"
+  | "LISTEN"
+  | "SYN_SENT"
+  | "SYN_RCVD"
+  | "ESTABLISHED"
+  | "FIN_WAIT_1"
+  | "FIN_WAIT_2"
+  | "CLOSE_WAIT"
+  | "CLOSING"
+  | "LAST_ACK"
+  | "TIME_WAIT";
+
+export type TcpEvent =
+  | "PASSIVE_OPEN"
+  | "ACTIVE_OPEN"
+  | "SYN"
+  | "SYN_ACK"
+  | "ACK"
+  | "CLOSE"
+  | "FIN"
+  | "FIN_ACK"
+  | "TIMEOUT_2MSL";
+
+/** All eleven RFC 793 states. */
+export const ALL_TCP_STATES: readonly TcpState[] = [
+  "CLOSED",
+  "LISTEN",
+  "SYN_SENT",
+  "SYN_RCVD",
+  "ESTABLISHED",
+  "FIN_WAIT_1",
+  "FIN_WAIT_2",
+  "CLOSE_WAIT",
+  "CLOSING",
+  "LAST_ACK",
+  "TIME_WAIT",
+];
+
+// ── Transition table ───────────────────────────────────────────────────────
+
+type TransitionTable = Partial<
+  Record<TcpState, Partial<Record<TcpEvent, TcpState>>>
+>;
+
+const TABLE: TransitionTable = {
+  CLOSED: {
+    PASSIVE_OPEN: "LISTEN",
+    ACTIVE_OPEN: "SYN_SENT",
+  },
+  LISTEN: {
+    SYN: "SYN_RCVD",
+    ACTIVE_OPEN: "SYN_SENT",
+  },
+  SYN_SENT: {
+    SYN_ACK: "ESTABLISHED",
+    SYN: "SYN_RCVD", // simultaneous open
+    CLOSE: "CLOSED",
+  },
+  SYN_RCVD: {
+    ACK: "ESTABLISHED",
+    CLOSE: "FIN_WAIT_1",
+  },
+  ESTABLISHED: {
+    CLOSE: "FIN_WAIT_1",
+    FIN: "CLOSE_WAIT",
+  },
+  FIN_WAIT_1: {
+    ACK: "FIN_WAIT_2",
+    FIN: "CLOSING",
+    FIN_ACK: "TIME_WAIT",
+  },
+  FIN_WAIT_2: {
+    FIN: "TIME_WAIT",
+  },
+  CLOSE_WAIT: {
+    CLOSE: "LAST_ACK",
+  },
+  CLOSING: {
+    ACK: "TIME_WAIT",
+  },
+  LAST_ACK: {
+    ACK: "CLOSED",
+  },
+  TIME_WAIT: {
+    TIMEOUT_2MSL: "CLOSED",
+  },
+};
+
+/**
+ * Look up the next state given a current state and event.
+ * Returns null for invalid (undefined) transitions.
+ */
+export function transition(state: TcpState, event: TcpEvent): TcpState | null {
+  return TABLE[state]?.[event] ?? null;
+}
+
+// ── Packet types ───────────────────────────────────────────────────────────
+
+export type PacketKind = "SYN" | "SYN-ACK" | "ACK" | "DATA" | "FIN" | "FIN-ACK";
+
+export interface TcpPacket {
+  readonly kind: PacketKind;
+  readonly seq: number;
+  readonly ack: number;
+  /** undefined for control packets */
+  readonly payload?: string;
+}
+
+// ── Step type ──────────────────────────────────────────────────────────────
+
+export type TcpPhase =
+  | "handshake"
+  | "transfer"
+  | "teardown"
+  | "drop"
+  | "timeout"
+  | "retransmit"
+  | "failed"
+  | "done";
+
+export interface TcpStep extends StepMeta {
+  readonly phase: TcpPhase;
+  readonly clientState: TcpState;
+  readonly serverState: TcpState;
+  /** The packet in flight this step (absent for timeout/failed steps). */
+  readonly packet?: TcpPacket;
+  /** True when the packet was dropped by the network. */
+  readonly dropped: boolean;
+  /** True when this is a retransmission. */
+  readonly retransmit: boolean;
+}
+
+// ── Session config ─────────────────────────────────────────────────────────
+
+export interface TcpSessionConfig {
+  readonly seed: number;
+  /** Probability [0, 1] that any given packet is lost. */
+  readonly lossRate: number;
+  readonly maxRetries: number;
+  /** Optional data segments to send after handshake (default: 2). */
+  readonly dataSegments?: number;
+}
+
+// ── Generator ─────────────────────────────────────────────────────────────
+
+/**
+ * Simulates a full TCP session: 3-way handshake → data transfer → 4-way teardown.
+ * Packet loss is injected via seeded PRNG, with timeout + retransmit steps.
+ */
+export function* tcpSession(config: TcpSessionConfig): Simulation<TcpStep> {
+  const rng = createRng(config.seed);
+  const { lossRate, maxRetries } = config;
+  const dataSegments = config.dataSegments ?? 2;
+
+  let clientState: TcpState = "CLOSED";
+  let serverState: TcpState = "CLOSED";
+  let clientSeq = 100;
+  let serverSeq = 200;
+
+  const shouldDrop = (): boolean => rng() < lossRate;
+
+  function makeStep(
+    phase: TcpPhase,
+    packet: TcpPacket | undefined,
+    dropped: boolean,
+    retransmit: boolean,
+    label: string,
+  ): TcpStep {
+    const base = {
+      phase,
+      clientState,
+      serverState,
+      dropped,
+      retransmit,
+      label,
+    } as const;
+    if (packet !== undefined) {
+      return { ...base, packet, highlights: [packet.kind] };
+    }
+    return base;
+  }
+
+  // Helper: send a packet from client→server with retry logic.
+  // Returns false if all retries are exhausted.
+  function* sendWithRetry(
+    phase: TcpPhase,
+    packet: TcpPacket,
+    onDelivered: () => void,
+  ): Generator<TcpStep, boolean, void> {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const isRetransmit = attempt > 0;
+      const dropped = shouldDrop();
+      if (dropped) {
+        yield makeStep(
+          phase,
+          packet,
+          true,
+          isRetransmit,
+          `${isRetransmit ? "Retransmit " : ""}${packet.kind} dropped`,
+        );
+        yield makeStep(
+          "timeout",
+          undefined,
+          false,
+          false,
+          `Timeout waiting for ACK — retry ${attempt + 1}/${maxRetries}`,
+        );
+      } else {
+        yield makeStep(
+          phase,
+          packet,
+          false,
+          isRetransmit,
+          `${isRetransmit ? "Retransmit " : ""}${packet.kind} seq=${packet.seq}`,
+        );
+        onDelivered();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ── 3-way handshake ──────────────────────────────────────────────────────
+
+  // Client: CLOSED → SYN_SENT
+  clientState = "SYN_SENT";
+  serverState = "LISTEN";
+
+  const synPacket: TcpPacket = { kind: "SYN", seq: clientSeq, ack: 0 };
+  let ok = yield* sendWithRetry("handshake", synPacket, () => {
+    serverState = "SYN_RCVD";
+  });
+  if (!ok) {
+    yield makeStep(
+      "failed",
+      undefined,
+      false,
+      false,
+      "Handshake failed — SYN exhausted retries",
+    );
+    return;
+  }
+
+  // Server → SYN-ACK
+  const synAckPacket: TcpPacket = {
+    kind: "SYN-ACK",
+    seq: serverSeq,
+    ack: clientSeq + 1,
+  };
+  ok = yield* sendWithRetry("handshake", synAckPacket, () => {
+    clientState = "ESTABLISHED";
+    serverSeq++;
+    clientSeq++;
+  });
+  if (!ok) {
+    yield makeStep(
+      "failed",
+      undefined,
+      false,
+      false,
+      "Handshake failed — SYN-ACK exhausted retries",
+    );
+    return;
+  }
+
+  // Client → ACK
+  const ackPacket: TcpPacket = {
+    kind: "ACK",
+    seq: clientSeq,
+    ack: serverSeq,
+  };
+  ok = yield* sendWithRetry("handshake", ackPacket, () => {
+    serverState = "ESTABLISHED";
+  });
+  if (!ok) {
+    yield makeStep(
+      "failed",
+      undefined,
+      false,
+      false,
+      "Handshake failed — final ACK exhausted retries",
+    );
+    return;
+  }
+
+  // ── Data transfer ────────────────────────────────────────────────────────
+
+  for (let i = 0; i < dataSegments; i++) {
+    const dataPacket: TcpPacket = {
+      kind: "DATA",
+      seq: clientSeq,
+      ack: serverSeq,
+      payload: `segment ${i + 1}`,
+    };
+    ok = yield* sendWithRetry("transfer", dataPacket, () => {
+      clientSeq += 10;
+    });
+    if (!ok) {
+      yield makeStep(
+        "failed",
+        undefined,
+        false,
+        false,
+        `Transfer failed — DATA segment ${i + 1} exhausted retries`,
+      );
+      return;
+    }
+
+    // Server ACKs the data
+    const dataAck: TcpPacket = {
+      kind: "ACK",
+      seq: serverSeq,
+      ack: clientSeq,
+    };
+    yield makeStep(
+      "transfer",
+      dataAck,
+      false,
+      false,
+      `Server ACK seq=${dataAck.seq} ack=${dataAck.ack}`,
+    );
+  }
+
+  // ── 4-way teardown ───────────────────────────────────────────────────────
+
+  // Client → FIN
+  clientState = "FIN_WAIT_1";
+  const finPacket: TcpPacket = { kind: "FIN", seq: clientSeq, ack: serverSeq };
+  ok = yield* sendWithRetry("teardown", finPacket, () => {
+    serverState = "CLOSE_WAIT";
+  });
+  if (!ok) {
+    yield makeStep(
+      "failed",
+      undefined,
+      false,
+      false,
+      "Teardown failed — FIN exhausted retries",
+    );
+    return;
+  }
+
+  // Server → ACK(FIN)
+  const finAckFromServer: TcpPacket = {
+    kind: "ACK",
+    seq: serverSeq,
+    ack: clientSeq + 1,
+  };
+  clientState = "FIN_WAIT_2";
+  yield makeStep(
+    "teardown",
+    finAckFromServer,
+    false,
+    false,
+    `Server ACK of FIN seq=${finAckFromServer.seq}`,
+  );
+  clientSeq++;
+
+  // Server → FIN
+  serverState = "LAST_ACK";
+  const serverFinPacket: TcpPacket = {
+    kind: "FIN",
+    seq: serverSeq,
+    ack: clientSeq,
+  };
+  ok = yield* sendWithRetry("teardown", serverFinPacket, () => {
+    clientState = "TIME_WAIT";
+  });
+  if (!ok) {
+    yield makeStep(
+      "failed",
+      undefined,
+      false,
+      false,
+      "Teardown failed — server FIN exhausted retries",
+    );
+    return;
+  }
+
+  // Client → final ACK
+  const finalAck: TcpPacket = {
+    kind: "ACK",
+    seq: clientSeq,
+    ack: serverSeq + 1,
+  };
+  yield makeStep(
+    "teardown",
+    finalAck,
+    false,
+    false,
+    `Client final ACK seq=${finalAck.seq}`,
+  );
+  serverState = "CLOSED";
+
+  // TIME_WAIT → CLOSED
+  yield makeStep(
+    "done",
+    undefined,
+    false,
+    false,
+    "TIME_WAIT: 2MSL timer — connection fully closed",
+  );
+  clientState = "CLOSED";
+
+  yield makeStep("done", undefined, false, false, "Connection closed");
+}

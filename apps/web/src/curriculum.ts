@@ -147,7 +147,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "TCP & Encapsulation",
         description:
           "Packets descend the protocol stack, shake hands in three ways, and survive the packet loss you inject.",
-        status: "planned",
+        status: "done",
+        route: "/net",
         topics: ["encapsulation", "3-way handshake", "retransmission"],
       },
       {
@@ -155,7 +156,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "DNS Resolution",
         description:
           "A name's journey from stub resolver through root, TLD, and authoritative servers.",
-        status: "planned",
+        status: "done",
+        route: "/net",
         topics: ["recursive resolution", "caching"],
       },
     ],
