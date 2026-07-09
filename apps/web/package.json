@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@nand2web/cpu": "workspace:^",
+    "@nand2web/lang": "workspace:^",
     "@nand2web/logic": "workspace:^",
     "@nand2web/sim-core": "workspace:^",
     "@tanstack/react-router": "^1.170.17",

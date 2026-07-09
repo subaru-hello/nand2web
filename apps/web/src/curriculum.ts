@@ -130,7 +130,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Compiler Pipeline",
         description:
           "Type a tiny program and watch it flow live through lexer → tokens → parser → AST → evaluation, one step at a time.",
-        status: "planned",
+        status: "done",
+        route: "/lang",
         topics: ["lexing", "recursive-descent parsing", "AST", "evaluation"],
       },
     ],
