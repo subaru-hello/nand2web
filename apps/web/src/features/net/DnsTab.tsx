@@ -227,6 +227,7 @@ export function DnsTab() {
           )}
           {visibleSteps.map((step, i) => (
             <MessageRow
+              // biome-ignore lint/suspicious/noArrayIndexKey: journey log is append-only playback; index is the step's stable identity (steps are never reordered or removed)
               key={`${step.message.from}:${step.message.to}:${step.message.kind}:${i}`}
               step={step}
               index={i}
