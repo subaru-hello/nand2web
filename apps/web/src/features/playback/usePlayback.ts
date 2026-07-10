@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { usePrefersReducedMotion } from "./usePrefersReducedMotion";
 
 /**
  * The shared playback engine: every simulator on the site — logic gates,
@@ -28,17 +29,22 @@ export function usePlayback(
   resetKey: unknown,
   autoPlay: boolean,
 ): Playback {
+  const reducedMotion = usePrefersReducedMotion();
   const [cursor, setCursor] = useState(total);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(1);
   const lastKey = useRef(resetKey);
 
+  // When reduced motion is preferred, suppress auto-start so the user
+  // can step manually. Manual play() still works normally.
+  const shouldAutoPlay = autoPlay && !reducedMotion;
+
   if (lastKey.current !== resetKey) {
     // Reset synchronously during render so the old cursor never paints
     // against the new step array.
     lastKey.current = resetKey;
-    setCursor(autoPlay ? 0 : total);
-    setPlaying(autoPlay && total > 0);
+    setCursor(shouldAutoPlay ? 0 : total);
+    setPlaying(shouldAutoPlay && total > 0);
   }
 
   useEffect(() => {
