@@ -14,8 +14,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const OSS_TITLE = "Open Source Software — nand2web";
+const OSS_DESC =
+  "Open source software is code whose licence grants everyone the right to use, study, modify, and redistribute it. From the Linux kernel to npm packages, OSS underpins virtually all modern computing.";
 
 export const Route = createFileRoute("/docs/oss")({
+  head: () =>
+    makeHead({
+      title: OSS_TITLE,
+      description: OSS_DESC,
+      path: "/docs/oss",
+      jsonLd: makeDocJsonLd({
+        title: OSS_TITLE,
+        description: OSS_DESC,
+        path: "/docs/oss",
+        breadcrumbLabel: "Open Source Software",
+      }),
+    }),
   component: Page,
 });
 

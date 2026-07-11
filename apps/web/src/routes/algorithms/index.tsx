@@ -5,8 +5,16 @@ import {
   SortingPlayground,
 } from "../../features/algorithms/SortingPlayground";
 import { DeepDive } from "../../features/deepdive/DeepDive";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/algorithms/")({
+  head: () =>
+    makeHead({
+      title: "Algorithms — nand2web",
+      description:
+        "Visualise sorting algorithms and compare time complexities in real time — watch bubble sort, merge sort, and quicksort race side by side with step-by-step traces.",
+      path: "/algorithms",
+    }),
   component: AlgorithmsPage,
 });
 

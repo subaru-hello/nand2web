@@ -13,8 +13,25 @@ import {
   References,
   Section,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const SE_TITLE = "Software Engineering — nand2web";
+const SE_DESC =
+  "Software engineering is building and evolving software with other people, over time, under constant change — with quality, reliability, and the ability to keep moving as goals.";
 
 export const Route = createFileRoute("/docs/software-engineering")({
+  head: () =>
+    makeHead({
+      title: SE_TITLE,
+      description: SE_DESC,
+      path: "/docs/software-engineering",
+      jsonLd: makeDocJsonLd({
+        title: SE_TITLE,
+        description: SE_DESC,
+        path: "/docs/software-engineering",
+        breadcrumbLabel: "Software Engineering",
+      }),
+    }),
   component: Page,
 });
 

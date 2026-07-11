@@ -5,8 +5,16 @@ import { DnsTab } from "../../features/net/DnsTab";
 import { netDeepDive } from "../../features/net/deepdive";
 import { EncapTab } from "../../features/net/EncapTab";
 import { TcpTab } from "../../features/net/TcpTab";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/net/")({
+  head: () =>
+    makeHead({
+      title: "Networking — nand2web",
+      description:
+        "Interactive networking simulators: trace DNS resolution, watch TCP handshakes, and dissect packet encapsulation layer by layer — from Ethernet frames to HTTP.",
+      path: "/net",
+    }),
   component: NetPage,
 });
 

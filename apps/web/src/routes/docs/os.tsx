@@ -15,8 +15,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const OS_TITLE = "Operating Systems — nand2web";
+const OS_DESC =
+  "An operating system turns raw hardware into a usable computer. It multiplexes the CPU, abstracts physical memory into isolated address spaces, and exposes a uniform file API regardless of the underlying storage device.";
 
 export const Route = createFileRoute("/docs/os")({
+  head: () =>
+    makeHead({
+      title: OS_TITLE,
+      description: OS_DESC,
+      path: "/docs/os",
+      jsonLd: makeDocJsonLd({
+        title: OS_TITLE,
+        description: OS_DESC,
+        path: "/docs/os",
+        breadcrumbLabel: "Operating Systems",
+      }),
+    }),
   component: Page,
 });
 

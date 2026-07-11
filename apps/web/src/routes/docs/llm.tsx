@@ -15,8 +15,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const LLM_TITLE = "Large Language Models — nand2web";
+const LLM_DESC =
+  "A large language model is a neural network trained to predict the next token in a sequence at enormous scale. That one objective produces a system that translates, writes code, and reasons — powered by the Transformer architecture.";
 
 export const Route = createFileRoute("/docs/llm")({
+  head: () =>
+    makeHead({
+      title: LLM_TITLE,
+      description: LLM_DESC,
+      path: "/docs/llm",
+      jsonLd: makeDocJsonLd({
+        title: LLM_TITLE,
+        description: LLM_DESC,
+        path: "/docs/llm",
+        breadcrumbLabel: "Large Language Models",
+      }),
+    }),
   component: Page,
 });
 

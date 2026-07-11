@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { lessons } from "../../features/logic/lessons";
 import { useCompleted } from "../../features/progress/progress";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/logic/")({
+  head: () =>
+    makeHead({
+      title: "Digital Logic — nand2web",
+      description:
+        "Step-by-step interactive simulator building all of digital logic from a single NAND gate — NOT, AND, OR, XOR, adders, latches, flip-flops, and an ALU.",
+      path: "/logic",
+    }),
   component: LogicIndexPage,
 });
 

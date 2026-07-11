@@ -2,12 +2,28 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { DeepDive } from "../../features/deepdive/DeepDive";
 import { logicDeepDives } from "../../features/logic/deepdives";
 import { getLesson, lessons } from "../../features/logic/lessons";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/logic/$lessonId")({
   loader: ({ params }) => {
-    if (!getLesson(params.lessonId)) {
+    const lesson = getLesson(params.lessonId);
+    if (!lesson) {
       throw notFound();
     }
+    return { title: lesson.title, summary: lesson.summary };
+  },
+  head: ({ loaderData, params }) => {
+    const title = loaderData
+      ? `${loaderData.title} — Digital Logic — nand2web`
+      : "Digital Logic — nand2web";
+    const description = loaderData
+      ? loaderData.summary
+      : "An interactive digital logic lesson on nand2web.";
+    return makeHead({
+      title,
+      description,
+      path: `/logic/${params.lessonId}`,
+    });
   },
   component: LessonPage,
   notFoundComponent: () => (

@@ -14,8 +14,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const MEMORY_TITLE = "Memory — nand2web";
+const MEMORY_DESC =
+  "Every program you run is a battle against one stubborn physical law: fast memory is small and expensive, while large memory is slow. Learn the full memory hierarchy from registers to object stores.";
 
 export const Route = createFileRoute("/docs/memory")({
+  head: () =>
+    makeHead({
+      title: MEMORY_TITLE,
+      description: MEMORY_DESC,
+      path: "/docs/memory",
+      jsonLd: makeDocJsonLd({
+        title: MEMORY_TITLE,
+        description: MEMORY_DESC,
+        path: "/docs/memory",
+        breadcrumbLabel: "Memory",
+      }),
+    }),
   component: Page,
 });
 

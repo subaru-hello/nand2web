@@ -16,8 +16,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const NETWORK_TITLE = "Networking — nand2web";
+const NETWORK_DESC =
+  "Networking moves bits reliably between machines centimetres or thousands of kilometres apart — from physical signals on a wire to routing, TCP handshakes, and the application protocols browsers speak every day.";
 
 export const Route = createFileRoute("/docs/network")({
+  head: () =>
+    makeHead({
+      title: NETWORK_TITLE,
+      description: NETWORK_DESC,
+      path: "/docs/network",
+      jsonLd: makeDocJsonLd({
+        title: NETWORK_TITLE,
+        description: NETWORK_DESC,
+        path: "/docs/network",
+        breadcrumbLabel: "Networking",
+      }),
+    }),
   component: Page,
 });
 

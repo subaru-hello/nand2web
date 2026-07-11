@@ -2,8 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { DeepDive } from "../../features/deepdive/DeepDive";
 import { langDeepDive } from "../../features/lang/deepdive";
 import { LangPlayground } from "../../features/lang/LangPlayground";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/lang/")({
+  head: () =>
+    makeHead({
+      title: "Compilers & Languages — nand2web",
+      description:
+        "Write a tiny language, watch it tokenised, parsed into an AST, and compiled to bytecode — an interactive compiler pipeline you can trace instruction by instruction.",
+      path: "/lang",
+    }),
   component: LangPage,
 });
 
