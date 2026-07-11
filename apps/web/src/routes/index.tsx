@@ -36,6 +36,84 @@ function HomePage() {
           An interactive computer-science curriculum. Every concept is a
           simulator you can step through — no video lectures, no walls of text.
         </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <Link
+            to="/logic"
+            className="rounded-md bg-sky-600 px-4 py-2 font-medium text-sm text-white transition-colors hover:bg-sky-500"
+          >
+            Start from NAND →
+          </Link>
+          <Link
+            to="/docs"
+            className="rounded-md border border-zinc-700 bg-zinc-900 px-4 py-2 font-medium text-sm text-zinc-200 transition-colors hover:border-sky-600"
+          >
+            Read the docs
+          </Link>
+        </div>
+      </section>
+
+      <section className="space-y-6">
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-semibold">How to walk the stack</h2>
+          <p className="text-zinc-400 text-pretty">
+            The intended path — bottom-up, one layer building on the last.
+          </p>
+        </div>
+        <ol className="grid gap-4 sm:grid-cols-2">
+          <li
+            key="step-01"
+            className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-2"
+          >
+            <span className="font-mono text-sm text-sky-400">01</span>
+            <p className="font-semibold">Start at the bottom.</p>
+            <p className="text-sm text-zinc-400">
+              Begin with{" "}
+              <Link to="/logic" className="text-sky-400 hover:text-sky-300">
+                Layer 1 — Digital Logic
+              </Link>
+              . Build a NAND gate and watch every other gate, an adder, and a
+              register emerge from it.
+            </p>
+          </li>
+          <li
+            key="step-02"
+            className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-2"
+          >
+            <span className="font-mono text-sm text-sky-400">02</span>
+            <p className="font-semibold">Climb one layer at a time.</p>
+            <p className="text-sm text-zinc-400">
+              Each layer assumes the one below it: gates become a CPU, the CPU
+              gains a pipeline and a cache, then an OS, a compiler, and a
+              network stack.
+            </p>
+          </li>
+          <li
+            key="step-03"
+            className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-2"
+          >
+            <span className="font-mono text-sm text-sky-400">03</span>
+            <p className="font-semibold">Break every simulator.</p>
+            <p className="text-sm text-zinc-400">
+              Toggle inputs, single-step the clock, inject a page fault or drop
+              a packet. Nothing here is a video — every diagram is a live
+              machine you drive.
+            </p>
+          </li>
+          <li
+            key="step-04"
+            className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-2"
+          >
+            <span className="font-mono text-sm text-sky-400">04</span>
+            <p className="font-semibold">Lock it in.</p>
+            <p className="text-sm text-zinc-400">
+              When a concept clicks, the{" "}
+              <Link to="/quiz" className="text-sky-400 hover:text-sky-300">
+                spaced-repetition quiz
+              </Link>{" "}
+              brings it back just before you'd forget it.
+            </p>
+          </li>
+        </ol>
       </section>
 
       <section aria-label="Curriculum" className="space-y-3">

@@ -20,6 +20,9 @@ function RootLayout() {
           </Link>
           <nav className="flex items-center gap-4 text-sm text-zinc-400">
             <LangToggle />
+            <Link to="/docs" className="transition-colors hover:text-zinc-100">
+              Docs
+            </Link>
             <a
               href="https://github.com/subaru-hello/nand2web"
               target="_blank"
