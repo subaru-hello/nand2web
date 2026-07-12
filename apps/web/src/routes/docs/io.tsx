@@ -16,8 +16,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const IO_TITLE = "I/O — nand2web";
+const IO_DESC =
+  "Every useful computation involves the outside world. I/O is the study of how a CPU and memory communicate with devices that are orders of magnitude slower, asynchronous, and wildly heterogeneous.";
 
 export const Route = createFileRoute("/docs/io")({
+  head: () =>
+    makeHead({
+      title: IO_TITLE,
+      description: IO_DESC,
+      path: "/docs/io",
+      jsonLd: makeDocJsonLd({
+        title: IO_TITLE,
+        description: IO_DESC,
+        path: "/docs/io",
+        breadcrumbLabel: "I/O",
+      }),
+    }),
   component: Page,
 });
 

@@ -13,8 +13,25 @@ import {
   References,
   Section,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const WEB_TITLE = "Web Development — nand2web";
+const WEB_DESC =
+  "Web development is building applications delivered over HTTP and run in a browser. From URLs and DNS to component frameworks, edge compute, and security — a complete mental model.";
 
 export const Route = createFileRoute("/docs/web")({
+  head: () =>
+    makeHead({
+      title: WEB_TITLE,
+      description: WEB_DESC,
+      path: "/docs/web",
+      jsonLd: makeDocJsonLd({
+        title: WEB_TITLE,
+        description: WEB_DESC,
+        path: "/docs/web",
+        breadcrumbLabel: "Web Development",
+      }),
+    }),
   component: Page,
 });
 

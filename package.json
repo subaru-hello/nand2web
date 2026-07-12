@@ -9,7 +9,8 @@
     "typecheck": "pnpm -r typecheck",
     "lint": "biome ci .",
     "format": "biome check --write .",
-    "deploy": "pnpm build && wrangler deploy"
+    "prerender": "node apps/web/scripts/prerender.mjs",
+    "deploy": "pnpm build && pnpm prerender && wrangler deploy"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",

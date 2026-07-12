@@ -15,8 +15,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const COMPILER_TITLE = "Compilers — nand2web";
+const COMPILER_DESC =
+  "A compiler translates source code into machine code the CPU can execute directly. Understanding how compilers work is understanding how the gap between human thought and silicon is bridged.";
 
 export const Route = createFileRoute("/docs/compiler")({
+  head: () =>
+    makeHead({
+      title: COMPILER_TITLE,
+      description: COMPILER_DESC,
+      path: "/docs/compiler",
+      jsonLd: makeDocJsonLd({
+        title: COMPILER_TITLE,
+        description: COMPILER_DESC,
+        path: "/docs/compiler",
+        breadcrumbLabel: "Compilers",
+      }),
+    }),
   component: Page,
 });
 

@@ -514,8 +514,8 @@ export function DocsShell({ active, children }: DocsShellProps) {
         </nav>
       </aside>
 
-      {/* Content */}
-      <main className="max-w-3xl min-w-0">{children}</main>
+      {/* Content — plain div; the page-level <main> lives in __root */}
+      <div className="max-w-3xl min-w-0">{children}</div>
     </div>
   );
 }

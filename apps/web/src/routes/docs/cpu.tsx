@@ -16,8 +16,25 @@ import {
   Section,
   useSvgId,
 } from "../../features/docs";
+import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
+
+const CPU_TITLE = "CPU — nand2web";
+const CPU_DESC =
+  "A CPU is the engine of a computer: a circuit that repeatedly reads an instruction from memory, figures out what it means, and carries it out. Everything reduces to billions of read-decode-execute cycles per second.";
 
 export const Route = createFileRoute("/docs/cpu")({
+  head: () =>
+    makeHead({
+      title: CPU_TITLE,
+      description: CPU_DESC,
+      path: "/docs/cpu",
+      jsonLd: makeDocJsonLd({
+        title: CPU_TITLE,
+        description: CPU_DESC,
+        path: "/docs/cpu",
+        breadcrumbLabel: "CPU",
+      }),
+    }),
   component: Page,
 });
 

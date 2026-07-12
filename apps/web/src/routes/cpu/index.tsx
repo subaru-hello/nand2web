@@ -3,8 +3,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { CpuPlayground } from "../../features/cpu/CpuPlayground";
 import { cpuDeepDive } from "../../features/cpu/deepdive";
 import { DeepDive } from "../../features/deepdive/DeepDive";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/cpu/")({
+  head: () =>
+    makeHead({
+      title: "The CPU — nand2web",
+      description:
+        "Run a 4-bit CPU simulator in your browser: write assembly, watch registers and flags update each clock cycle, and see the fetch-decode-execute loop live.",
+      path: "/cpu",
+    }),
   component: CpuPage,
 });
 

@@ -4,8 +4,16 @@ import { CachePlayground } from "../../features/arch/CachePlayground";
 import { archDeepDive } from "../../features/arch/deepdive";
 import { PipelinePlayground } from "../../features/arch/PipelinePlayground";
 import { DeepDive } from "../../features/deepdive/DeepDive";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/arch/")({
+  head: () =>
+    makeHead({
+      title: "Computer Architecture — nand2web",
+      description:
+        "Interactive pipeline and cache simulators showing how modern CPUs achieve throughput: pipelining, cache hierarchies, hazards, and forwarding — visualised step by step.",
+      path: "/arch",
+    }),
   component: ArchPage,
 });
 

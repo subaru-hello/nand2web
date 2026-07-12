@@ -1,8 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { DocsShell, TOPICS } from "../../features/docs";
 import { useLang } from "../../features/i18n/lang";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/docs/")({
+  head: () =>
+    makeHead({
+      title: "Documentation — nand2web",
+      description:
+        "nand2web's written CS reference — textbook companion to the interactive simulators. Each topic covered at depth in both English and Japanese.",
+      path: "/docs",
+    }),
   component: DocsPage,
 });
 

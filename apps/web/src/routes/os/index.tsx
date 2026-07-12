@@ -4,8 +4,16 @@ import { DeepDive } from "../../features/deepdive/DeepDive";
 import { osDeepDive } from "../../features/os/deepdive";
 import { PagingPlayground } from "../../features/os/PagingPlayground";
 import { SchedulerPlayground } from "../../features/os/SchedulerPlayground";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/os/")({
+  head: () =>
+    makeHead({
+      title: "Operating Systems — nand2web",
+      description:
+        "Hands-on OS simulators: watch a round-robin scheduler dispatch processes and explore virtual memory paging — see how the kernel manages CPU time and address spaces.",
+      path: "/os",
+    }),
   component: OsPage,
 });
 

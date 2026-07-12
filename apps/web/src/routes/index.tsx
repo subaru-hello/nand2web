@@ -1,8 +1,35 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { CurriculumLayer, ModuleStatus } from "../curriculum";
 import { layersTopDown } from "../curriculum";
+import { makeHead } from "../features/seo/seo";
 
 export const Route = createFileRoute("/")({
+  head: () =>
+    makeHead({
+      title: "nand2web — Learn how computers work, from NAND gates to the web",
+      description:
+        "An interactive computer-science curriculum. Step through NAND gates, a 4-bit CPU, compilers, operating systems, and network protocols with hands-on visual simulators.",
+      path: "/",
+      jsonLd: [
+        {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "nand2web",
+          url: "https://cs.n10u.jp",
+          description:
+            "An interactive computer-science curriculum. Step through NAND gates, a 4-bit CPU, compilers, operating systems, and network protocols with hands-on visual simulators.",
+          inLanguage: ["en", "ja"],
+        },
+        {
+          "@context": "https://schema.org",
+          "@type": "EducationalOrganization",
+          name: "nand2web",
+          url: "https://cs.n10u.jp",
+          description:
+            "An interactive computer-science curriculum teaching how computers work from NAND gates to the web.",
+        },
+      ],
+    }),
   component: HomePage,
 });
 

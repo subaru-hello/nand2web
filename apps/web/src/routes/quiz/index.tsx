@@ -1,7 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { QuizView } from "../../features/quiz/QuizView";
+import { makeHead } from "../../features/seo/seo";
 
 export const Route = createFileRoute("/quiz/")({
+  head: () =>
+    makeHead({
+      title: "Spaced-Repetition Quiz — nand2web",
+      description:
+        "Test and reinforce your CS knowledge with a spaced-repetition quiz covering digital logic, CPU architecture, operating systems, networking, and more.",
+      path: "/quiz",
+    }),
   component: QuizPage,
 });
 
