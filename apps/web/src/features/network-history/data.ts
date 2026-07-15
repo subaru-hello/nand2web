@@ -106,7 +106,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       en: "Early Ethernet used a shared coaxial bus: all machines listened to all packets, and only the destination NIC would keep a frame (based on the destination MAC). If two machines transmitted simultaneously, their signals collided and both were destroyed. CSMA/CD (Carrier Sense Multiple Access / Collision Detection) was the arbitration rule: listen before transmitting; if a collision is detected, back off a random exponential time and retry. Switches eliminated this problem entirely: a switch creates a *private* full-duplex link between each port, so there is only ever one sender per segment. Gigabit Ethernet ports on modern switches never experience collisions — CSMA/CD is now relevant only as history and in Wi-Fi's cousin protocol CSMA/CA.",
       ja: "初期のEthernetは共有の同軸バスを使用していた：すべてのマシンがすべてのパケットを受信し、宛先NICだけがフレームを保持する（宛先MACに基づいて）。2台のマシンが同時に送信すると信号が衝突し、両方が破壊された。CSMA/CD（キャリア検知多重アクセス/衝突検出）がその調停規則だった：送信前にリッスンし、衝突が検出されたらランダムな指数バックオフ時間を置いて再試行する。スイッチはこの問題を完全に解消した：スイッチは各ポート間に*プライベート*な全二重リンクを作成するため、セグメントごとに送信者は常に1台だけだ。現代のスイッチのギガビットEthernetポートは衝突を経験しない——CSMA/CDは今では歴史的事実とWi-FiのいとこプロトコルCSMA/CAにのみ関連する。",
     },
-    example: "Frame: [Dst MAC 6B][Src MAC 6B][EtherType 2B][Payload ≤1500B][FCS 4B]",
+    example:
+      "Frame: [Dst MAC 6B][Src MAC 6B][EtherType 2B][Payload ≤1500B][FCS 4B]",
   },
 
   // 5 -----------------------------------------------------------------------
@@ -150,7 +151,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       en: "The three-way handshake (SYN → SYN-ACK → ACK) synchronises two random Initial Sequence Numbers (ISNs) before any data flows. Random ISNs prevent an off-path attacker from injecting forged segments into an existing connection — a quiet but important security property. Once established, TCP uses a sliding window: the sender can have multiple segments outstanding simultaneously (up to the window size) without waiting for each individual ACK. Congestion control algorithms like TCP CUBIC (Linux default) and BBR (Google) independently discovered that the key challenge is probing for available bandwidth without causing excessive queuing delay — a problem that turns out to share deep mathematical structure with control theory and information theory.",
       ja: "3ウェイハンドシェイク（SYN → SYN-ACK → ACK）は、データが流れる前に2つのランダムな初期シーケンス番号（ISN）を同期させる。ランダムなISNは、オフパスの攻撃者が既存の接続に偽造セグメントを注入するのを防ぐ——静かだが重要なセキュリティ特性だ。確立後、TCPはスライディングウィンドウを使用する：送信者は各ACKを待たずに複数のセグメントを同時に送信できる（ウィンドウサイズまで）。TCP CUBIC（Linuxデフォルト）やBBR（Google）などの輻輳制御アルゴリズムは、過度のキューイング遅延を引き起こさずに利用可能な帯域を探索することが重要な課題だと独立して発見した——これは制御理論と情報理論と深い数学的構造を共有する問題であることが判明している。",
     },
-    example: "Sender ISN=1000 → SYN seq=1000\nReceiver ISN=5000 → SYN-ACK seq=5000 ack=1001\nSender → ACK seq=1001 ack=5001  [ESTABLISHED]",
+    example:
+      "Sender ISN=1000 → SYN seq=1000\nReceiver ISN=5000 → SYN-ACK seq=5000 ack=1001\nSender → ACK seq=1001 ack=5001  [ESTABLISHED]",
   },
 
   // 7 -----------------------------------------------------------------------
@@ -193,7 +195,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       en: "When your laptop sends a TCP SYN to an external server, the home router records the mapping `(192.168.1.42:54321, 93.184.216.34:80)` in its NAT table, rewrites the source address to its own public IP with a fresh port, and forwards the packet. When the reply arrives, the router reverses the rewrite. The laptop and the server are unaware of each other's real addresses. This transparency is NAT's appeal — but it breaks any protocol where the external peer must initiate the connection. IPv6 was designed to make NAT unnecessary (every device gets a globally routable address), and DHCP-equivalent functionality is built into IPv6 via SLAAC (Stateless Address Autoconfiguration).",
       ja: "ラップトップが外部サーバーにTCP SYNを送信すると、ホームルーターはNATテーブルにマッピング`(192.168.1.42:54321, 93.184.216.34:80)`を記録し、送信元アドレスを新しいポートで自身のパブリックIPに書き換え、パケットを転送する。返信が届くと、ルーターは書き換えを逆にする。ラップトップとサーバーはお互いの実際のアドレスを知らない。この透過性がNATの魅力だ——しかし外部ピアが接続を開始しなければならないプロトコルはすべて壊れる。IPv6はNATを不要にするように設計されており（すべてのデバイスがグローバルにルーティング可能なアドレスを取得）、DHCP相当の機能はSLAAC（ステートレスアドレス自動構成）によってIPv6に組み込まれている。",
     },
-    example: "RFC 1918 private ranges:\n  10.0.0.0/8      (16 M hosts)\n  172.16.0.0/12   (1 M hosts)\n  192.168.0.0/16  (65 K hosts)",
+    example:
+      "RFC 1918 private ranges:\n  10.0.0.0/8      (16 M hosts)\n  172.16.0.0/12   (1 M hosts)\n  192.168.0.0/16  (65 K hosts)",
   },
 
   // 9 -----------------------------------------------------------------------
@@ -236,7 +239,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       en: "HTTP's evolution tracks the evolution of web performance engineering. HTTP/1.0 opened a new TCP connection per request — expensive when each TCP handshake costs 1 RTT and TLS adds another. HTTP/1.1 introduced persistent connections (keep-alive) and pipelining, but pipelining was fragile and browsers never trusted it; the workaround was opening 6 parallel connections per origin, multiplying resource consumption. HTTP/2 (RFC 7540, 2015) finally solved this with binary framing and stream multiplexing over a single connection, cutting TCP connection count from tens to one. HTTP/3 (RFC 9114, 2022) replaced TCP itself with QUIC — a UDP-based transport that multiplexes streams at the transport layer, so a packet loss on one stream does not stall others. The bandwidth of each generation was similar; the latency story is why these protocol generations matter.",
       ja: "HTTPの進化はWebパフォーマンスエンジニアリングの進化を追跡する。HTTP/1.0はリクエストごとに新しいTCP接続を開いた——各TCPハンドシェイクが1 RTTかかり、TLSがさらに追加されると高コストだ。HTTP/1.1はパーシステント接続（keep-alive）とパイプラインを導入したが、パイプラインは不安定でブラウザは信頼しなかった；ワークアラウンドはオリジンごとに6つの並列接続を開くことで、リソース消費を倍増させた。HTTP/2（RFC 7540、2015年）は最終的に単一接続上のバイナリフレーミングとストリーム多重化でこれを解決し、TCP接続数を数十から1に削減した。HTTP/3（RFC 9114、2022年）はTCP自体をQUICに置き換えた——UDPベースのトランスポートがトランスポート層でストリームを多重化するため、1つのストリームのパケット損失が他を止めない。各世代の帯域幅は似ており、これらのプロトコル世代が重要な理由はレイテンシの話だ。",
     },
-    example: "GET /docs/network HTTP/1.1\nHost: nand2web.example\nAccept: text/html\n\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8",
+    example:
+      "GET /docs/network HTTP/1.1\nHost: nand2web.example\nAccept: text/html\n\nHTTP/1.1 200 OK\nContent-Type: text/html; charset=utf-8",
   },
 
   // 11 ----------------------------------------------------------------------
@@ -258,7 +262,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       en: "A TLS 1.3 handshake works in one round trip: the client sends its key share (an ephemeral ECDH public key) and a list of supported cipher suites in the ClientHello. The server responds with its key share, chosen cipher, and its certificate chain in the ServerHello + EncryptedExtensions + Certificate + CertificateVerify messages — all in one flight. Both sides can now derive the same symmetric session key from the two ephemeral ECDH values, without the key ever appearing on the wire. The server's certificate is signed by a CA; the browser walks the chain to a trusted root. Thereafter, all data is encrypted with AES-GCM or ChaCha20-Poly1305 — authenticated encryption that provides both confidentiality and tamper detection in a single pass. The practical consequence: every byte your browser sends to an HTTPS site is unreadable to any router, ISP, or eavesdropper on the path.",
       ja: "TLS 1.3ハンドシェイクは1ラウンドトリップで機能する：クライアントはClientHelloで鍵共有（エフェメラルECDH公開鍵）とサポートされる暗号スイートのリストを送信する。サーバーはServerHello + EncryptedExtensions + Certificate + CertificateVerifyメッセージで鍵共有・選択された暗号・証明書チェーンを返す——すべて1つのフライトで。両者は鍵がワイヤー上に現れることなく、2つのエフェメラルECDH値から同じ対称セッション鍵を導出できる。サーバーの証明書はCAによって署名されており、ブラウザはチェーンを信頼されたルートまで辿る。以降、すべてのデータはAES-GCMまたはChaCha20-Poly1305で暗号化される——機密性と改ざん検出の両方を単一パスで提供する認証付き暗号だ。実用的な結果：ブラウザがHTTPSサイトに送信するすべてのバイトは、経路上のルーター・ISP・盗聴者には読めない。",
     },
-    example: 'Client → Server: ClientHello (key_share, cipher_suites)\nServer → Client: ServerHello + Certificate + CertificateVerify\n[Both derive shared key via ECDHE]\nAll subsequent traffic: AES-GCM encrypted',
+    example:
+      "Client → Server: ClientHello (key_share, cipher_suites)\nServer → Client: ServerHello + Certificate + CertificateVerify\n[Both derive shared key via ECDHE]\nAll subsequent traffic: AES-GCM encrypted",
   },
 ];
 

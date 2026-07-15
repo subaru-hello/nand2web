@@ -13,9 +13,15 @@ import {
   P,
   Prose,
   References,
+  rich,
   Section,
   useSvgId,
+  useT,
 } from "../../features/docs";
+import {
+  NETWORK_HISTORY_FURTHER_READING,
+  NETWORK_HISTORY_STAGES,
+} from "../../features/network-history/data";
 import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
 
 const NETWORK_TITLE = "Networking — nand2web";
@@ -48,6 +54,11 @@ function Page() {
           ja: "ネットワークとは、数センチから数千キロメートル離れたマシン間でビットを確実かつ効率的に転送するための学問分野です。ケーブル上の物理信号、世界規模でのパケットのアドレッシングとルーティング、確実な配送を保証するハンドシェイク、そしてブラウザ・メールクライアント・APIが日常的に使用するアプリケーションプロトコルまでを包括します。",
         }}
       >
+        {/* ---------------------------------------------------------------- */}
+        {/* 0. History & Mental Models                                        */}
+        {/* ---------------------------------------------------------------- */}
+        <NetworkHistorySection />
+
         {/* ---------------------------------------------------------------- */}
         {/* 1. What networking is                                             */}
         {/* ---------------------------------------------------------------- */}
@@ -657,6 +668,102 @@ function Page() {
         />
       </Article>
     </DocsShell>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// History & Mental Models section
+// ---------------------------------------------------------------------------
+
+function NetworkHistorySection() {
+  const t = useT();
+  const fr = NETWORK_HISTORY_FURTHER_READING;
+  return (
+    <Section
+      id="history"
+      title={{
+        en: "History & Mental Models — networking from first principles",
+        ja: "歴史と考え方——ファーストプリンシプルから見るネットワーキング",
+      }}
+    >
+      <Prose
+        paragraphs={[
+          {
+            en: "The protocols you use every day were not designed in a single stroke of genius. They evolved over 150 years, each generation inheriting the hard lessons of the one before. Walking this arc in chronological order is the fastest way to internalise the *why* behind TCP, DNS, and TLS — and to build the mental models that let you reason about networking problems you have never seen before.",
+            ja: "あなたが毎日使うプロトコルは、単一の天才的なひらめきで設計されたものではない。150年をかけて進化し、各世代が前の世代の苦い教訓を受け継いできた。この流れを時系列で追うことが、TCP・DNS・TLSの背後にある*なぜ*を内面化する最短ルートであり、今まで見たことのないネットワーキングの問題を推論するためのメンタルモデルを構築する手段だ。",
+          },
+          {
+            en: "Four cross-cutting themes appear again and again: **bandwidth vs latency** (two independent numbers that govern very different problems); **layering** (each layer solves one problem and trusts those below, without caring about those above); **best-effort in the core, reliability at the edges** (keep the network simple; let endpoints handle correctness); and **distributed, emergent control** (no central authority knows the whole picture — local decisions compose into global behaviour).",
+            ja: "4つの横断的なテーマが繰り返し登場する：**帯域幅とレイテンシ**（全く異なる問題を支配する2つの独立した数値）；**レイヤリング**（各レイヤーは1つの問題を解決し、下層を信頼し、上層を気にしない）；**コアでのベストエフォート、エッジでの信頼性**（ネットワークをシンプルに保ち、正確性はエンドポイントに任せる）；そして**分散した創発的制御**（全体像を知る中央機関は存在しない——ローカルな決定がグローバルな振る舞いを形成する）。",
+          },
+        ]}
+      />
+
+      <div className="space-y-8 mt-2">
+        {NETWORK_HISTORY_STAGES.map((stage) => (
+          <StageBlock key={stage.id} t={t} stage={stage} />
+        ))}
+      </div>
+
+      {/* Further reading attribution */}
+      <div className="mt-8 rounded-xl border border-zinc-700 bg-zinc-900/60 px-5 py-4 space-y-1">
+        <p className="text-sm font-semibold text-zinc-400">
+          {t({ en: "Further reading", ja: "さらに読む" })}
+        </p>
+        <p className="text-sm text-zinc-300 leading-relaxed">
+          {rich(t(fr.note))}{" "}
+          <a
+            href={fr.href}
+            target="_blank"
+            rel="noreferrer"
+            className="text-sky-400 underline-offset-2 hover:text-sky-300 hover:underline"
+          >
+            {t(fr.label)} →
+          </a>
+        </p>
+      </div>
+    </Section>
+  );
+}
+
+interface StageBlockProps {
+  t: (lt: { en: string; ja: string }) => string;
+  stage: (typeof NETWORK_HISTORY_STAGES)[number];
+}
+
+function StageBlock({ t, stage }: StageBlockProps) {
+  return (
+    <div className="space-y-3 border-l-2 border-zinc-700 pl-4">
+      <h3 className="text-lg font-semibold text-zinc-100">{t(stage.title)}</h3>
+
+      {/* Historical milestone */}
+      <p className="text-xs font-medium uppercase tracking-wide text-sky-400">
+        {t({ en: "Milestone", ja: "マイルストーン" })}
+      </p>
+      <p className="text-zinc-300 leading-relaxed text-sm">
+        {rich(t(stage.milestone))}
+      </p>
+
+      {/* Mental model */}
+      <p className="text-xs font-medium uppercase tracking-wide text-emerald-400">
+        {t({ en: "Mental model", ja: "メンタルモデル" })}
+      </p>
+      <p className="text-zinc-300 leading-relaxed text-sm">
+        {rich(t(stage.mentalModel))}
+      </p>
+
+      {/* Detail */}
+      <p className="text-zinc-400 leading-relaxed text-sm">
+        {rich(t(stage.detail))}
+      </p>
+
+      {/* Optional code example */}
+      {stage.example && (
+        <pre className="rounded bg-zinc-800 px-4 py-3 font-mono text-[12px] text-sky-300 overflow-x-auto whitespace-pre-wrap">
+          {stage.example}
+        </pre>
+      )}
+    </div>
   );
 }
 
