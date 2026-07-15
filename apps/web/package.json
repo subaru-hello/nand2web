@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@nand2web/algorithms": "workspace:^",
+    "@nand2web/pathfinding": "workspace:^",
     "@nand2web/arch": "workspace:^",
     "@nand2web/cpu": "workspace:^",
     "@nand2web/lang": "workspace:^",

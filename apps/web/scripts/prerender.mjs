@@ -43,6 +43,7 @@ const SIM_ROUTES = [
   "/lang",
   "/net",
   "/algorithms",
+  "/pathfinding",
   "/quiz",
 ];
 
@@ -142,6 +143,7 @@ function priority(route) {
     route === "/lang" ||
     route === "/net" ||
     route === "/algorithms" ||
+    route === "/pathfinding" ||
     route === "/logic"
   )
     return "0.8";
