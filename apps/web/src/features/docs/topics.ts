@@ -10,7 +10,8 @@ export type TopicId =
   | "web"
   | "llm"
   | "software-engineering"
-  | "oss";
+  | "oss"
+  | "arai60";
 
 /** Literal route paths for all topic pages — matches TanStack Router's registered routes. */
 export type TopicRoute =
@@ -23,7 +24,8 @@ export type TopicRoute =
   | "/docs/web"
   | "/docs/llm"
   | "/docs/software-engineering"
-  | "/docs/oss";
+  | "/docs/oss"
+  | "/docs/arai60";
 
 export interface Topic {
   readonly id: TopicId;
@@ -133,6 +135,16 @@ export const TOPICS: readonly Topic[] = [
     blurb: {
       en: "Licenses, governance, contribution models, and the economics of open-source software.",
       ja: "ライセンス・ガバナンス・コントリビューションモデル、オープンソースソフトウェアの経済学。",
+    },
+  },
+  {
+    id: "arai60",
+    slug: "arai60",
+    route: "/docs/arai60",
+    label: { en: "Arai60", ja: "Arai60" },
+    blurb: {
+      en: "Bilingual write-ups for 60 LeetCode problems across 12 algorithm categories — approach, complexity, code, and alternatives.",
+      ja: "12カテゴリ・60問の LeetCode 問題を日英バイリンガルで解説——考え方・計算量・コード・代替解法を収録。",
     },
   },
 ] as const;
