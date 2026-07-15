@@ -74,8 +74,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       ja: "3. ARPANETとストア・アンド・フォワード——エンドツーエンド原則",
     },
     milestone: {
-      en: "In October 1969 the first ARPANET message was sent from UCLA to Stanford Research Institute — only the letters 'lo' arrived before the SRI system crashed attempting to receive 'login'. By 1972 the network had 23 nodes; by 1973 it spanned the Atlantic.",
-      ja: "1969年10月、ARPANETの最初のメッセージがUCLAからスタンフォード研究所に送信された——「login」を受信しようとしたSRIのシステムがクラッシュし、届いたのは「lo」の2文字だけだった。1972年までにネットワークは23ノードを持ち、1973年には大西洋を横断した。",
+      en: "In October 1969 the first ARPANET message was sent from UCLA to Stanford Research Institute — only the letters 'lo' arrived before the SRI system crashed attempting to receive 'login'. By 1972 the network had grown to around 30 nodes; by 1973 it spanned the Atlantic.",
+      ja: "1969年10月、ARPANETの最初のメッセージがUCLAからスタンフォード研究所に送信された——「login」を受信しようとしたSRIのシステムがクラッシュし、届いたのは「lo」の2文字だけだった。1972年までにネットワークは約30ノードに成長し、1973年には大西洋を横断した。",
     },
     mentalModel: {
       en: "The **end-to-end principle** (Saltzer, Reed & Clark, 1984): intelligence belongs at the endpoints, not in the network core. The network's job is to move bits; correctness, ordering, and reliability are the responsibility of the communicating applications. A network that tries to guarantee reliability in the middle becomes complex and brittle; a dumb, best-effort network that endpoints can reason about is far more flexible and composable.",
@@ -140,8 +140,8 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
       ja: "6. TCP——信頼性のないネットワークの上の信頼性",
     },
     milestone: {
-      en: "The Transmission Control Protocol was specified in RFC 793 (1981) by Vint Cerf, Bob Kahn, and collaborators; it separated cleanly from IP in 1978 (originally a monolithic protocol), giving the internet its two-layer reliability architecture.",
-      ja: "伝送制御プロトコルは1981年にRFC 793としてヴィント・サーフ、ボブ・カーン、共同研究者たちによって仕様化された；1978年にIPと明確に分離（元々はモノリシックプロトコルだった）し、インターネットに2層の信頼性アーキテクチャを与えた。",
+      en: "TCP and IP began as a single monolithic protocol; the two were split into separate layers in 1978, and the Transmission Control Protocol was later specified in RFC 793 (1981) by Vint Cerf, Bob Kahn, and collaborators — giving the internet its two-layer reliability architecture.",
+      ja: "TCPとIPは当初1つのモノリシックプロトコルだった；1978年に両者は別々の層へと分離され、伝送制御プロトコルは後の1981年にRFC 793としてヴィント・サーフ、ボブ・カーン、共同研究者たちによって仕様化された——インターネットに2層の信頼性アーキテクチャを与えた。",
     },
     mentalModel: {
       en: "**Reliability at the edges, not in the core.** TCP does not ask the network to guarantee delivery; instead, the sender keeps every segment until the receiver acknowledges it, and retransmits if an acknowledgement doesn't arrive in time. This means the network stays simple (IP just routes) and reliability is an add-on at the endpoints. A second key insight: **flow control and congestion control are separate concerns**. Flow control prevents the sender from overwhelming the receiver's buffer (the receiver advertises a window). Congestion control prevents the sender from overwhelming the network (the sender probes for available capacity with slow-start and backs off on loss).",
@@ -164,7 +164,7 @@ export const NETWORK_HISTORY_STAGES: readonly NetworkHistoryStage[] = [
     },
     milestone: {
       en: "BGP (Border Gateway Protocol) was standardised in RFC 1105 (1989) and refined to BGP-4 (RFC 1771, 1995), which introduced CIDR-aware prefix aggregation; today over 100,000 autonomous systems (ISPs, cloud providers, enterprises) use BGP-4 to exchange routing information across the public Internet.",
-      ja: "BGP（ボーダーゲートウェイプロトコル）はRFC 1105（1989年）で標準化され、BGP-4（RFC 1771、1995年）に改善された；BGP-4はCIDAR対応のプレフィックス集約を導入し、今日では10万以上の自律システム（ISP・クラウドプロバイダー・企業）がパブリックインターネット上でルーティング情報を交換するためにBGP-4を使用している。",
+      ja: "BGP（ボーダーゲートウェイプロトコル）はRFC 1105（1989年）で標準化され、BGP-4（RFC 1771、1995年）に改善された；BGP-4はCIDR対応のプレフィックス集約を導入し、今日では10万以上の自律システム（ISP・クラウドプロバイダー・企業）がパブリックインターネット上でルーティング情報を交換するためにBGP-4を使用している。",
     },
     mentalModel: {
       en: "The Internet's global routing is an **emergent property of distributed policy**. No central authority computes optimal routes. Instead, each Autonomous System (AS) — an ISP, a cloud provider, a university — announces which IP prefixes it owns and which it can reach, and what business relationships it has with neighbours (customer, peer, provider). BGP assembles the global routing table from these local announcements. The result is robust: when a submarine cable breaks or a major AS fails, BGP reconverges in seconds to minutes, routing around the damage — exactly as Baran envisioned in 1964.",
