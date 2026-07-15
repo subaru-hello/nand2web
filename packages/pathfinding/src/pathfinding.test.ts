@@ -48,7 +48,11 @@ function isolatedGoalGrid() {
 /** Minimum BFS/Dijkstra/A* shortest path on the open 5×5 grid = 9 cells. */
 const OPEN_SHORTEST = 9;
 
-function isValidPath(path: readonly Coord[], start: Coord, goal: Coord): boolean {
+function isValidPath(
+  path: readonly Coord[],
+  start: Coord,
+  goal: Coord,
+): boolean {
   if (path.length === 0) return false;
   if (!coordEq(path[0] as Coord, start)) return false;
   if (!coordEq(path[path.length - 1] as Coord, goal)) return false;

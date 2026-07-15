@@ -1,11 +1,6 @@
 import type { Simulation, StepMeta } from "@nand2web/sim-core";
-import {
-  type Coord,
-  coordEq,
-  coordKey,
-  neighbors,
-} from "./grid.ts";
 import type { Grid } from "./grid.ts";
+import { type Coord, coordEq, coordKey, neighbors } from "./grid.ts";
 import { MinHeap } from "./heap.ts";
 
 // ---------------------------------------------------------------------------

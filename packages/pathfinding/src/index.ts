@@ -1,20 +1,20 @@
 export {
+  type Coord,
   cloneGrid,
   coordEq,
   coordKey,
   createGrid,
   fromIndex,
+  type Grid,
   inBounds,
   isWall,
   neighbors,
   serializeGrid,
   setWall,
   toggleWall,
-  type Coord,
-  type Grid,
 } from "./grid.ts";
 
-export { MinHeap, type HeapItem } from "./heap.ts";
+export { type HeapItem, MinHeap } from "./heap.ts";
 
 export {
   astar,

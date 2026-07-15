@@ -75,8 +75,8 @@ export function setWall(grid: Grid, c: Coord, wall: boolean): Grid {
 // 4-directional neighbors (no diagonals), in-bounds and passable only.
 const DIRS: readonly Coord[] = [
   { x: 0, y: -1 }, // north
-  { x: 1, y: 0 },  // east
-  { x: 0, y: 1 },  // south
+  { x: 1, y: 0 }, // east
+  { x: 0, y: 1 }, // south
   { x: -1, y: 0 }, // west
 ];
 

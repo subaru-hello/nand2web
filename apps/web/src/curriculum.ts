@@ -186,7 +186,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Pathfinding",
         description:
           "BFS, DFS, Dijkstra, and A* explore a grid you draw — powered by a hand-rolled binary heap.",
-        status: "planned",
+        status: "done",
+        route: "/pathfinding",
         topics: ["graph traversal", "priority queues", "heuristics"],
       },
       {

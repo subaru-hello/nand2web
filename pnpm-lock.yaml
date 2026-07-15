@@ -47,6 +47,9 @@ importers:
       '@nand2web/os':
         specifier: workspace:^
         version: link:../../packages/os
+      '@nand2web/pathfinding':
+        specifier: workspace:^
+        version: link:../../packages/pathfinding
       '@nand2web/sim-core':
         specifier: workspace:^
         version: link:../../packages/sim-core
