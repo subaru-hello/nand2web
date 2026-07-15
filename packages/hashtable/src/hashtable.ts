@@ -114,6 +114,8 @@ interface OpenAddressingState {
   readonly strategy: "open-addressing";
   slots: OpenSlot[];
   size: number;
+  /** Number of tombstone slots currently in the table. */
+  tombstones: number;
   bucketCount: number;
 }
 
@@ -136,6 +138,15 @@ function loadFactor(state: TableState): number {
   return state.size / state.bucketCount;
 }
 
+/**
+ * The occupancy fraction used for the resize DECISION in open addressing.
+ * Includes tombstones so that a table stuffed with tombstones still triggers
+ * a resize, preventing the probe loop from being unable to find empty slots.
+ */
+function occupancyFactor(state: OpenAddressingState): number {
+  return (state.size + state.tombstones) / state.bucketCount;
+}
+
 function threshold(state: TableState): number {
   return state.strategy === "chaining"
     ? LOAD_FACTOR_THRESHOLD_CH
@@ -147,11 +158,9 @@ function threshold(state: TableState): number {
 // ---------------------------------------------------------------------------
 
 function nextBucketCount(current: number): number {
-  // Double and find next odd number (simple prime-ish sizing).
-  let n = current * 2 + 1;
-  // Ensure it's at least odd (reducing collision groupings).
-  if (n % 2 === 0) n++;
-  return n;
+  // Double and keep odd (odd sizes reduce clustering with linear probing).
+  // current*2+1 is always odd, so no second adjustment is needed.
+  return current * 2 + 1;
 }
 
 function* rehashChaining(
@@ -221,7 +230,8 @@ function* rehashOpenAddressing(
   // Mutate state.
   state.slots = newSlots;
   state.bucketCount = newCount;
-  state.size = allEntries.length; // tombstones cleared
+  state.size = allEntries.length; // live entries only
+  state.tombstones = 0; // tombstones cleared by rehash
 
   const newSnap = makeSnapshot(state);
   yield {
@@ -509,12 +519,17 @@ function* oaInsert(
     const slot = state.slots[idx] as OpenSlot;
 
     if (slot.state === "empty") {
-      // Insert here (or at first tombstone if found earlier).
+      // Insert at the first tombstone seen (if any), otherwise here.
       const insertAt = firstTombstone !== null ? firstTombstone : idx;
       state.slots[insertAt] = { state: "occupied", entry: { key, value } };
-      if (firstTombstone === null) state.size++;
-      // If we re-used a tombstone, size unchanged (no new occupied → slot was already "used").
-      // Actually for open-addressing we track live entries in `size`; tombstone re-use = net 0.
+      if (firstTombstone !== null) {
+        // Reusing a tombstone: live count goes up, tombstone count goes down.
+        state.size++;
+        state.tombstones--;
+      } else {
+        // Consuming a fresh empty slot.
+        state.size++;
+      }
 
       yield {
         hashedBucket: home,
@@ -531,13 +546,12 @@ function* oaInsert(
         },
       };
 
-      if (firstTombstone === null) {
-        // Only check resize when we actually consumed a new slot.
-        if (loadFactor(state) > threshold(state)) {
-          const snap = makeSnapshot(state);
-          yield* rehashOpenAddressing(state, snap);
-          resized = true;
-        }
+      // Always check resize: use tombstone-inclusive occupancy so a table
+      // crowded with tombstones triggers a resize even at a low live-entry count.
+      if (occupancyFactor(state) > threshold(state)) {
+        const snap = makeSnapshot(state);
+        yield* rehashOpenAddressing(state, snap);
+        resized = true;
       }
 
       return {
@@ -603,7 +617,42 @@ function* oaInsert(
     idx = (idx + 1) % state.bucketCount;
   }
 
-  // Table full (shouldn't happen if resize works correctly, but guard it).
+  // Belt-and-suspenders: the probe loop exhausted all slots without hitting
+  // a true "empty". If we saw a tombstone, reuse it rather than dropping the
+  // insert. With the tombstone-inclusive resize trigger this branch should
+  // not be reachable in normal operation, but we keep it as a safety net.
+  if (firstTombstone !== null) {
+    state.slots[firstTombstone] = { state: "occupied", entry: { key, value } };
+    state.size++;
+    state.tombstones--;
+
+    yield {
+      hashedBucket: home,
+      probeSequence: [...probeSeq],
+      collisions,
+      buckets: makeSnapshot(state),
+      resizing: false,
+      meta: {
+        label: `Inserted "${key}" at tombstone slot ${firstTombstone} (no empty found)`,
+        highlights: [String(firstTombstone)],
+      },
+    };
+
+    if (occupancyFactor(state) > threshold(state)) {
+      const snap = makeSnapshot(state);
+      yield* rehashOpenAddressing(state, snap);
+      resized = true;
+    }
+
+    return {
+      loadFactor: loadFactor(state),
+      bucketCount: state.bucketCount,
+      probeCount: state.bucketCount,
+      resized,
+    };
+  }
+
+  // Genuinely full (no empty, no tombstone) — should not happen with correct resize.
   yield {
     hashedBucket: home,
     probeSequence: [...probeSeq],
@@ -799,6 +848,7 @@ function* oaRemove(
       // Place tombstone.
       state.slots[idx] = { state: "tombstone" };
       state.size--;
+      state.tombstones++;
       yield {
         hashedBucket: home,
         probeSequence: [...probeSeq],
@@ -879,6 +929,7 @@ export class HashTable {
           state: "empty" as SlotState,
         })),
         size: 0,
+        tombstones: 0,
         bucketCount: initialBuckets,
       } satisfies OpenAddressingState;
     }
