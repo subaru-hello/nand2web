@@ -58,6 +58,7 @@ const DOCS_ROUTES = [
   "/docs/llm",
   "/docs/software-engineering",
   "/docs/oss",
+  "/docs/arai60",
 ];
 
 const ROUTES = [...SIM_ROUTES, ...DOCS_ROUTES];
@@ -80,6 +81,8 @@ const TOPIC_BLURBS = {
   "software-engineering":
     "Version control, testing, design patterns, architecture, and the craft of building reliable software.",
   oss: "Licenses, governance, contribution models, and the economics of open-source software.",
+  arai60:
+    "Bilingual write-ups for 60 LeetCode problems across 12 algorithm categories — approach, complexity, code, and alternatives.",
 };
 
 // ---------------------------------------------------------------------------
