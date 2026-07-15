@@ -195,7 +195,8 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: "Hash Table Internals",
         description:
           "Chaining vs. open addressing, collisions, tombstones, and resize animations.",
-        status: "planned",
+        status: "done",
+        route: "/hashtable",
         topics: ["hashing", "load factor", "amortized analysis"],
       },
     ],
