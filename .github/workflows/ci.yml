@@ -48,6 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -59,9 +60,16 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
+      # Prerender must run before deploy: it snapshots every route to static
+      # HTML (dist/<route>/index.html) so JS-less AI crawlers and search engines
+      # can read the body. Skipping it silently ships an empty CSR shell.
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm prerender
       # Skips (rather than fails) until the CLOUDFLARE_API_TOKEN secret is configured.
       # (secrets context isn't allowed in step-level `if`, hence the env indirection.)
       - uses: cloudflare/wrangler-action@v3
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
         with:
           apiToken: ${{ env.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ env.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
