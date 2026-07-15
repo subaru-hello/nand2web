@@ -59,6 +59,14 @@ function RootLayout() {
               >
                 GitHub
               </a>
+              <a
+                href="https://www.youtube.com/@octo_byte"
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors hover:text-zinc-100"
+              >
+                YouTube
+              </a>
             </nav>
           </div>
         </header>
