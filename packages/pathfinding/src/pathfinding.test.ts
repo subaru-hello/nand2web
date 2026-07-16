@@ -148,26 +148,29 @@ describe.each(optimalAlgos)("$name — optimal path", ({ fn }) => {
     const grid = openGrid5x5();
     const { result } = collectSteps(fn(grid, grid.start, grid.goal));
     expect(result).toBeDefined();
-    expect(result!.stats.found).toBe(true);
-    expect(result!.stats.pathLength).toBe(OPEN_SHORTEST);
-    expect(isValidPath(result!.path, grid.start, grid.goal)).toBe(true);
+    if (!result) throw new Error("expected a result");
+    expect(result.stats.found).toBe(true);
+    expect(result.stats.pathLength).toBe(OPEN_SHORTEST);
+    expect(isValidPath(result.path, grid.start, grid.goal)).toBe(true);
   });
 
   it("finds shortest path on grid with wall obstacle", () => {
     const grid = wallGrid5x5();
     const { result } = collectSteps(fn(grid, grid.start, grid.goal));
     expect(result).toBeDefined();
-    expect(result!.stats.found).toBe(true);
-    expect(result!.stats.pathLength).toBeGreaterThanOrEqual(OPEN_SHORTEST);
-    expect(isValidPath(result!.path, grid.start, grid.goal)).toBe(true);
+    if (!result) throw new Error("expected a result");
+    expect(result.stats.found).toBe(true);
+    expect(result.stats.pathLength).toBeGreaterThanOrEqual(OPEN_SHORTEST);
+    expect(isValidPath(result.path, grid.start, grid.goal)).toBe(true);
   });
 
   it("returns found:false and empty path when goal is unreachable", () => {
     const grid = isolatedGoalGrid();
     const { result } = collectSteps(fn(grid, grid.start, grid.goal));
     expect(result).toBeDefined();
-    expect(result!.stats.found).toBe(false);
-    expect(result!.path.length).toBe(0);
+    if (!result) throw new Error("expected a result");
+    expect(result.stats.found).toBe(false);
+    expect(result.path.length).toBe(0);
   });
 });
 
@@ -180,24 +183,27 @@ describe("dfs", () => {
     const grid = openGrid5x5();
     const { result } = collectSteps(dfs(grid, grid.start, grid.goal));
     expect(result).toBeDefined();
-    expect(result!.stats.found).toBe(true);
-    expect(isValidPath(result!.path, grid.start, grid.goal)).toBe(true);
+    if (!result) throw new Error("expected a result");
+    expect(result.stats.found).toBe(true);
+    expect(isValidPath(result.path, grid.start, grid.goal)).toBe(true);
   });
 
   it("finds a valid path on grid with wall obstacle", () => {
     const grid = wallGrid5x5();
     const { result } = collectSteps(dfs(grid, grid.start, grid.goal));
     expect(result).toBeDefined();
-    expect(result!.stats.found).toBe(true);
-    expect(isValidPath(result!.path, grid.start, grid.goal)).toBe(true);
+    if (!result) throw new Error("expected a result");
+    expect(result.stats.found).toBe(true);
+    expect(isValidPath(result.path, grid.start, grid.goal)).toBe(true);
   });
 
   it("returns found:false when goal is unreachable", () => {
     const grid = isolatedGoalGrid();
     const { result } = collectSteps(dfs(grid, grid.start, grid.goal));
     expect(result).toBeDefined();
-    expect(result!.stats.found).toBe(false);
-    expect(result!.path.length).toBe(0);
+    if (!result) throw new Error("expected a result");
+    expect(result.stats.found).toBe(false);
+    expect(result.path.length).toBe(0);
   });
 });
 
