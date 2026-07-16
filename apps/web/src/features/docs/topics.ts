@@ -9,6 +9,7 @@ export type TopicId =
   | "compiler"
   | "network"
   | "web"
+  | "server-architecture"
   | "llm"
   | "software-engineering"
   | "oss"
@@ -24,6 +25,7 @@ export type TopicRoute =
   | "/docs/compiler"
   | "/docs/network"
   | "/docs/web"
+  | "/docs/server-architecture"
   | "/docs/llm"
   | "/docs/software-engineering"
   | "/docs/oss"
@@ -117,6 +119,16 @@ export const TOPICS: readonly Topic[] = [
     blurb: {
       en: "HTTP, HTML/CSS, JavaScript engines, browsers, CDNs, and modern web architecture.",
       ja: "HTTP・HTML/CSS・JavaScriptエンジン・ブラウザ・CDN、現代のWebアーキテクチャ。",
+    },
+  },
+  {
+    id: "server-architecture",
+    slug: "server-architecture",
+    route: "/docs/server-architecture",
+    label: { en: "Server Architecture", ja: "サーバーアーキテクチャ" },
+    blurb: {
+      en: "How one server handles thousands of connections — sockets, processes, threads, the C10K problem, event loops — and how servers talk: reverse proxies, RPC, message queues.",
+      ja: "1台のサーバーが数千の接続を扱う仕組み——ソケット・プロセス・スレッド・C10K問題・イベントループ——とサーバー間通信：リバースプロキシ・RPC・メッセージキュー。",
     },
   },
   {
