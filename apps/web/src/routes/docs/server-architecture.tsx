@@ -105,9 +105,15 @@ function Page() {
             ]}
             rows={[
               [
-                { en: "**Process** per connection", ja: "接続ごとの**プロセス**" },
+                {
+                  en: "**Process** per connection",
+                  ja: "接続ごとの**プロセス**",
+                },
                 { en: "High (megabytes)", ja: "高い（メガバイト）" },
-                { en: "High (address-space switch)", ja: "高い（アドレス空間の切替）" },
+                {
+                  en: "High (address-space switch)",
+                  ja: "高い（アドレス空間の切替）",
+                },
                 {
                   en: "Simple; full isolation, crash-safe",
                   ja: "シンプル；完全分離、クラッシュ耐性",
@@ -115,9 +121,15 @@ function Page() {
                 { en: "Apache `prefork`, CGI", ja: "Apache `prefork`、CGI" },
               ],
               [
-                { en: "**Thread** per connection", ja: "接続ごとの**スレッド**" },
+                {
+                  en: "**Thread** per connection",
+                  ja: "接続ごとの**スレッド**",
+                },
                 { en: "Medium (~1 MB stack)", ja: "中（約1MBのスタック）" },
-                { en: "Medium (shared address space)", ja: "中（アドレス空間を共有）" },
+                {
+                  en: "Medium (shared address space)",
+                  ja: "中（アドレス空間を共有）",
+                },
                 {
                   en: "Shared memory → locks & races",
                   ja: "共有メモリ→ロックと競合",
@@ -130,7 +142,10 @@ function Page() {
               [
                 { en: "**Event loop**", ja: "**イベントループ**" },
                 { en: "Low (a few KB of state)", ja: "低い（数KBの状態）" },
-                { en: "None (no per-conn thread)", ja: "なし（接続ごとのスレッドなし）" },
+                {
+                  en: "None (no per-conn thread)",
+                  ja: "なし（接続ごとのスレッドなし）",
+                },
                 {
                   en: "Callbacks / async; never block",
                   ja: "コールバック/async；決してブロックしない",
@@ -142,7 +157,10 @@ function Page() {
                   en: "**Lightweight thread**",
                   ja: "**軽量スレッド**",
                 },
-                { en: "Low (KB, grows on demand)", ja: "低い（KB、必要に応じ拡大）" },
+                {
+                  en: "Low (KB, grows on demand)",
+                  ja: "低い（KB、必要に応じ拡大）",
+                },
                 {
                   en: "Very low (runtime-scheduled)",
                   ja: "非常に低い（ランタイムがスケジュール）",
@@ -190,7 +208,10 @@ function Page() {
               steps={[
                 { label: { en: "Client", ja: "クライアント" } },
                 {
-                  label: { en: "LB / reverse proxy", ja: "LB／リバースプロキシ" },
+                  label: {
+                    en: "LB / reverse proxy",
+                    ja: "LB／リバースプロキシ",
+                  },
                   sub: { en: "terminate · distribute", ja: "終端・分配" },
                 },
                 {
@@ -210,7 +231,10 @@ function Page() {
 
           <Callout
             tone="insight"
-            title={{ en: "The whole page in one line", ja: "このページを1行で" }}
+            title={{
+              en: "The whole page in one line",
+              ja: "このページを1行で",
+            }}
             t={{
               en: "A server is a loop around `accept()`; scaling is deciding **who runs that loop, and where** — inside one process across cores, or across machines over the network.",
               ja: "サーバーとは `accept()` の周りのループであり、スケーリングとは**そのループを誰が、どこで回すか**を決めることだ——1プロセス内でコアをまたいで回すのか、マシンをまたいでネットワーク越しに回すのか。",
