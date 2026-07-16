@@ -232,7 +232,9 @@ function LayerCard({ layer }: { layer: CurriculumLayer }) {
                   {status.label}
                 </span>
               </div>
-              <p className="mt-1.5 text-sm text-zinc-400">{t(mod.description)}</p>
+              <p className="mt-1.5 text-sm text-zinc-400">
+                {t(mod.description)}
+              </p>
               <p className="mt-2 font-mono text-xs text-zinc-500">
                 {mod.topics.join(" · ")}
               </p>
