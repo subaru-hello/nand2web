@@ -182,7 +182,7 @@ export const curriculum: readonly CurriculumLayer[] = [
         title: { en: "TCP & Encapsulation", ja: "TCP とカプセル化" },
         description: {
           en: "Packets descend the protocol stack, shake hands in three ways, and survive the packet loss you inject.",
-          ja: "パケットがプロトコルスタックを降り、3 ウェイハンドシェイクを行い、あなたが注入したパケットロストから復帰する様子を観察します。",
+          ja: "パケットがプロトコルスタックを降り、3 ウェイハンドシェイクを行い、あなたが注入したパケットロスから復帰する様子を観察します。",
         },
         status: "done",
         route: "/net",
