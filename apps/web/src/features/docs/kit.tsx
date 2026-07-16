@@ -19,6 +19,8 @@ const INTERNAL_ROUTES = new Set<string>([
   "/lang",
   "/net",
   "/algorithms",
+  "/pathfinding",
+  "/hashtable",
   "/quiz",
 ]);
 
