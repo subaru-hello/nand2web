@@ -229,6 +229,16 @@ function Page() {
             ))}
           </div>
 
+          {/* Synchronous chain vs message queue */}
+          <Figure
+            caption={{
+              en: "A synchronous call chain shares its fate: the slowest / most broken service sets the pace for everyone above it. A queue decouples the two sides — the producer is done at enqueue, the consumer works at its own pace.",
+              ja: "同期呼び出しの連鎖は運命共同体——最も遅い・壊れたサービスのペースに上流全体が引きずられる。キューは両者を切り離し、送る側はエンキューで完了、受ける側は自分のペースで処理する。",
+            }}
+          >
+            <SyncVsQueueDiagram />
+          </Figure>
+
           <Callout
             tone="insight"
             title={{
@@ -503,6 +513,343 @@ function SocketLifecycleDiagram() {
         </marker>
         <marker
           id={sid("arrw")}
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L6,3 L0,6 z" fill={C.warn} />
+        </marker>
+      </defs>
+    </Diagram>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Synchronous RPC chain vs asynchronous message queue
+// Top: Client → A → B → C, waits stack up, failure propagates back.
+// Bottom: Producer → queue → Consumer, decoupled; consumer offline is fine.
+// ---------------------------------------------------------------------------
+
+function SyncVsQueueDiagram() {
+  const sid = useSvgId();
+  // Top panel node positions (Client, A, B, C).
+  const nodes = [
+    { x: 20, label: "Client", caller: true },
+    { x: 160, label: "Service A", caller: true },
+    { x: 300, label: "Service B", caller: true },
+    { x: 440, label: "Service C", caller: false },
+  ];
+  const boxW = 110;
+  const boxH = 44;
+  const topY = 48;
+  // Adjacent (caller → callee) pairs, precomputed to avoid unchecked indexing.
+  const links = nodes.flatMap((from, i) => {
+    const to = nodes[i + 1];
+    return to ? [{ from, to }] : [];
+  });
+  const lastNode = nodes[nodes.length - 1];
+  return (
+    <Diagram
+      label={{
+        en: "Top: a synchronous Client → A → B → C call chain where each caller waits and failure at C propagates back up. Bottom: an asynchronous producer → queue → consumer where the producer finishes at enqueue and an offline consumer only delays processing.",
+        ja: "上：同期の Client → A → B → C 呼び出し連鎖。各呼び出し元は待機し、C の失敗が上流へ伝播する。下：非同期の producer → queue → consumer。送る側はエンキューで完了し、consumer がオフラインでも処理が遅れるだけ。",
+      }}
+      viewBox="0 0 580 360"
+      maxHeight={360}
+    >
+      {/* Panel backgrounds */}
+      <rect width="580" height="360" fill={C.panel} rx="8" />
+      <rect
+        x="12"
+        y="18"
+        width="556"
+        height="150"
+        rx="8"
+        fill="none"
+        stroke={C.line}
+        strokeWidth="1"
+        strokeDasharray="3 3"
+      />
+      <rect
+        x="12"
+        y="196"
+        width="556"
+        height="150"
+        rx="8"
+        fill="none"
+        stroke={C.line}
+        strokeWidth="1"
+        strokeDasharray="3 3"
+      />
+
+      {/* ---- Top panel: synchronous RPC chain ---- */}
+      <text x="28" y="36" fill={C.accent} fontSize="12" fontWeight="700">
+        Synchronous RPC chain
+      </text>
+
+      {nodes.map((n, i) => (
+        <g key={`sync-node-${n.label}`}>
+          <rect
+            x={n.x}
+            y={topY}
+            width={boxW}
+            height={boxH}
+            rx="6"
+            fill={C.muted}
+            stroke={i === 3 ? C.warn : C.high}
+            strokeWidth="1.5"
+          />
+          <text
+            x={n.x + boxW / 2}
+            y={topY + 27}
+            textAnchor="middle"
+            fill={C.text}
+            fontSize="12"
+            fontWeight="600"
+          >
+            {n.label}
+          </text>
+          {n.caller && (
+            <text
+              x={n.x + boxW / 2}
+              y={topY + boxH + 16}
+              textAnchor="middle"
+              fill={C.faint}
+              fontSize="9"
+              fontStyle="italic"
+            >
+              waits…
+            </text>
+          )}
+        </g>
+      ))}
+
+      {/* Request arrows (solid, healthy) between the four nodes */}
+      {links.map((l) => (
+        <line
+          key={`req-${l.to.label}`}
+          x1={l.from.x + boxW}
+          y1={topY + boxH / 2}
+          x2={l.to.x}
+          y2={topY + boxH / 2}
+          stroke={C.high}
+          strokeWidth="2"
+          markerEnd={`url(#${sid("req")})`}
+        />
+      ))}
+
+      {/* Failure flash on Service C (the last, broken node) */}
+      {lastNode && (
+        <text
+          x={lastNode.x + boxW / 2}
+          y={topY - 4}
+          textAnchor="middle"
+          fill={C.warn}
+          fontSize="14"
+          fontWeight="700"
+        >
+          ✕
+        </text>
+      )}
+
+      {/* Failure / latency propagating back up the chain (dashed, warn) */}
+      {links.map((l) => (
+        <line
+          key={`fail-${l.to.label}`}
+          x1={l.to.x}
+          y1={topY + boxH + 30}
+          x2={l.from.x + boxW}
+          y2={topY + boxH + 30}
+          stroke={C.warn}
+          strokeWidth="1.5"
+          strokeDasharray="5 3"
+          markerEnd={`url(#${sid("fail")})`}
+        />
+      ))}
+      <text
+        x="290"
+        y={topY + boxH + 56}
+        textAnchor="middle"
+        fill={C.warn}
+        fontSize="10"
+        fontWeight="600"
+      >
+        failure &amp; latency propagate up the chain
+      </text>
+
+      {/* ---- Bottom panel: asynchronous via queue ---- */}
+      <text x="28" y="214" fill={C.accent} fontSize="12" fontWeight="700">
+        Asynchronous via message queue
+      </text>
+
+      {/* Producer */}
+      <rect
+        x="20"
+        y="246"
+        width={boxW}
+        height={boxH}
+        rx="6"
+        fill={C.muted}
+        stroke={C.high}
+        strokeWidth="1.5"
+      />
+      <text
+        x={20 + boxW / 2}
+        y="273"
+        textAnchor="middle"
+        fill={C.text}
+        fontSize="12"
+        fontWeight="600"
+      >
+        Producer
+      </text>
+      <text
+        x={20 + boxW / 2}
+        y="308"
+        textAnchor="middle"
+        fill={C.high}
+        fontSize="9"
+        fontStyle="italic"
+      >
+        done at enqueue
+      </text>
+
+      {/* Producer → queue arrow (ends AT the queue) */}
+      <line
+        x1={20 + boxW}
+        y1="268"
+        x2="242"
+        y2="268"
+        stroke={C.high}
+        strokeWidth="2"
+        markerEnd={`url(#${sid("req")})`}
+      />
+      <text
+        x="196"
+        y="258"
+        textAnchor="middle"
+        fill={C.faint}
+        fontSize="9"
+        fontStyle="italic"
+      >
+        ack ≠ processed
+      </text>
+
+      {/* Queue: horizontal slot stack holding waiting messages */}
+      <rect
+        x="248"
+        y="248"
+        width="120"
+        height="40"
+        rx="4"
+        fill={C.panel}
+        stroke={C.accent}
+        strokeWidth="1.5"
+      />
+      {[0, 1, 2, 3].map((i) => (
+        <rect
+          key={`slot-${i}`}
+          x={256 + i * 27}
+          y="256"
+          width="20"
+          height="24"
+          rx="2"
+          fill={i < 3 ? C.accent : "none"}
+          stroke={C.accent}
+          strokeWidth="1"
+        />
+      ))}
+      <text
+        x="308"
+        y="306"
+        textAnchor="middle"
+        fill={C.accent}
+        fontSize="9"
+        fontWeight="600"
+      >
+        queue · messages wait
+      </text>
+
+      {/* Queue → consumer arrow (consumer pulls on its own arrow) */}
+      <line
+        x1="368"
+        y1="268"
+        x2="446"
+        y2="268"
+        stroke={C.high}
+        strokeWidth="2"
+        markerEnd={`url(#${sid("req")})`}
+      />
+      <text
+        x="407"
+        y="258"
+        textAnchor="middle"
+        fill={C.faint}
+        fontSize="9"
+        fontStyle="italic"
+      >
+        pulls
+      </text>
+
+      {/* Consumer (dimmed / offline) */}
+      <rect
+        x="452"
+        y="246"
+        width={boxW}
+        height={boxH}
+        rx="6"
+        fill={C.panel}
+        stroke={C.faint}
+        strokeWidth="1.5"
+        strokeDasharray="4 3"
+      />
+      <text
+        x={452 + boxW / 2}
+        y="273"
+        textAnchor="middle"
+        fill={C.faint}
+        fontSize="12"
+        fontWeight="600"
+      >
+        Consumer
+      </text>
+      <text
+        x={452 + boxW / 2}
+        y="308"
+        textAnchor="middle"
+        fill={C.faint}
+        fontSize="9"
+        fontStyle="italic"
+      >
+        offline — messages wait
+      </text>
+      <text
+        x="290"
+        y="332"
+        textAnchor="middle"
+        fill={C.high}
+        fontSize="10"
+        fontWeight="600"
+      >
+        consumer down does not fail the producer · consumes at its own pace
+      </text>
+
+      {/* Arrow markers */}
+      <defs>
+        <marker
+          id={sid("req")}
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L6,3 L0,6 z" fill={C.high} />
+        </marker>
+        <marker
+          id={sid("fail")}
           markerWidth="6"
           markerHeight="6"
           refX="5"
