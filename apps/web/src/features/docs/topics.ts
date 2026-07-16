@@ -1,6 +1,7 @@
 import type { LocalizedText } from "../deepdive/DeepDive";
 
 export type TopicId =
+  | "cs-history"
   | "cpu"
   | "memory"
   | "io"
@@ -15,6 +16,7 @@ export type TopicId =
 
 /** Literal route paths for all topic pages — matches TanStack Router's registered routes. */
 export type TopicRoute =
+  | "/docs/cs-history"
   | "/docs/cpu"
   | "/docs/memory"
   | "/docs/io"
@@ -37,6 +39,16 @@ export interface Topic {
 }
 
 export const TOPICS: readonly Topic[] = [
+  {
+    id: "cs-history",
+    slug: "cs-history",
+    route: "/docs/cs-history",
+    label: { en: "The Whole Picture", ja: "全体像と歴史" },
+    blurb: {
+      en: "The entry map: where every module sits in the landscape of computer science, told through its history — from al-Khwārizmī's algorithms and Turing's theory to gates, CPUs, networks, and learning machines.",
+      ja: "入口となる地図：各モジュールがコンピュータサイエンスの風景のどこに位置するかを、歴史を通じて示す——アルゴリズムとチューリングの理論から、ゲート・CPU・ネットワーク・学習する機械まで。",
+    },
+  },
   {
     id: "cpu",
     slug: "cpu",

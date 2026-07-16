@@ -50,6 +50,7 @@ const SIM_ROUTES = [
 
 const DOCS_ROUTES = [
   "/docs",
+  "/docs/cs-history",
   "/docs/cpu",
   "/docs/memory",
   "/docs/io",
@@ -69,6 +70,8 @@ const ROUTES = [...SIM_ROUTES, ...DOCS_ROUTES];
 // TOPICS blurbs (mirrors apps/web/src/features/docs/topics.ts)
 // ---------------------------------------------------------------------------
 const TOPIC_BLURBS = {
+  "cs-history":
+    "The entry map: where every module sits in the landscape of computer science, told through its history — from al-Khwārizmī's algorithms and Turing's theory to gates, CPUs, networks, and learning machines.",
   cpu: "How a processor fetches, decodes, and executes instructions — from the ALU to pipelining to modern superscalar cores.",
   memory:
     "The memory hierarchy: registers, caches, DRAM, and virtual memory — why speed and capacity trade off.",
