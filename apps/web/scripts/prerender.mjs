@@ -58,6 +58,7 @@ const DOCS_ROUTES = [
   "/docs/compiler",
   "/docs/network",
   "/docs/web",
+  "/docs/server-architecture",
   "/docs/llm",
   "/docs/software-engineering",
   "/docs/oss",
@@ -82,6 +83,8 @@ const TOPIC_BLURBS = {
   network:
     "The layered internet: Ethernet, IP, TCP/UDP, DNS, and how data moves across the planet.",
   web: "HTTP, HTML/CSS, JavaScript engines, browsers, CDNs, and modern web architecture.",
+  "server-architecture":
+    "How one server handles thousands of connections — sockets, processes, threads, the C10K problem, event loops — and how servers talk: reverse proxies, RPC, message queues.",
   llm: "Transformers, attention, training at scale, and what modern language models actually compute.",
   "software-engineering":
     "Version control, testing, design patterns, architecture, and the craft of building reliable software.",
