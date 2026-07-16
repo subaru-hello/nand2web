@@ -9,6 +9,7 @@ import {
   CompareTable,
   DocsShell,
   Figure,
+  FlowRow,
   LayerStack,
   Prose,
   References,
@@ -358,6 +359,58 @@ function CsHistorySection() {
           },
         ]}
       />
+
+      <Figure
+        caption={{
+          en: "The whole arc at a glance — ten stages from al-Khwārizmī's algorithms to today's learning machines. Each stage below expands one step of this line.",
+          ja: "流れの全体を一目で——アル＝フワーリズミーのアルゴリズムから今日の学習する機械まで、10段階。下の各段落は、この線の1ステップを詳しく開いたものです。",
+        }}
+      >
+        <FlowRow
+          steps={[
+            {
+              label: { en: "Algorithms", ja: "アルゴリズム" },
+              sub: { en: "9th c.", ja: "9世紀" },
+            },
+            {
+              label: { en: "Computability", ja: "計算可能性" },
+              sub: { en: "1936", ja: "1936" },
+            },
+            {
+              label: { en: "Logic gates", ja: "論理ゲート" },
+              sub: { en: "1937", ja: "1937" },
+            },
+            {
+              label: { en: "Stored program", ja: "プログラム内蔵" },
+              sub: { en: "1945", ja: "1945" },
+            },
+            {
+              label: { en: "Compilers", ja: "コンパイラ" },
+              sub: { en: "1957", ja: "1957" },
+            },
+            {
+              label: { en: "Operating systems", ja: "OS" },
+              sub: { en: "1969", ja: "1969" },
+            },
+            {
+              label: { en: "Complexity", ja: "計算量" },
+              sub: { en: "1971", ja: "1971" },
+            },
+            {
+              label: { en: "Personal / GUI", ja: "PC・GUI" },
+              sub: { en: "1973", ja: "1973" },
+            },
+            {
+              label: { en: "Network & Web", ja: "ネットとWeb" },
+              sub: { en: "1991", ja: "1991" },
+            },
+            {
+              label: { en: "Learning machines", ja: "学習する機械" },
+              sub: { en: "2017–", ja: "2017–" },
+            },
+          ]}
+        />
+      </Figure>
 
       <div className="space-y-8 mt-2">
         {CS_HISTORY_STAGES.map((stage) => (
