@@ -5,8 +5,10 @@ import {
 } from "../../features/cs-history/data";
 import {
   Article,
+  C,
   Callout,
   CompareTable,
+  Diagram,
   DocsShell,
   Figure,
   FlowRow,
@@ -15,6 +17,7 @@ import {
   References,
   rich,
   Section,
+  useSvgId,
   useT,
 } from "../../features/docs";
 import { makeDocJsonLd, makeHead } from "../../features/seo/seo";
@@ -414,7 +417,19 @@ function CsHistorySection() {
 
       <div className="space-y-8 mt-2">
         {CS_HISTORY_STAGES.map((stage) => (
-          <StageBlock key={stage.id} t={t} stage={stage} />
+          <div key={stage.id} className="space-y-6">
+            <StageBlock t={t} stage={stage} />
+            {stage.id === "stored-program" && (
+              <Figure
+                caption={{
+                  en: "The von Neumann architecture. Instructions and data share one memory — a program can be loaded, and even manipulated, like any other data. That is what makes the machine general-purpose.",
+                  ja: "フォン・ノイマン型アーキテクチャ。命令とデータは同じメモリに同居する——プログラムはデータと同じように読み込め、書き換えることさえできる。これが機械を汎用にする。",
+                }}
+              >
+                <VonNeumannDiagram />
+              </Figure>
+            )}
+          </div>
         ))}
       </div>
 
@@ -477,5 +492,279 @@ function StageBlock({ t, stage }: StageBlockProps) {
         </pre>
       )}
     </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Von Neumann (stored-program) architecture SVG diagram
+// ---------------------------------------------------------------------------
+
+function VonNeumannDiagram() {
+  const sid = useSvgId();
+  return (
+    <Diagram
+      label={{
+        en: "Von Neumann architecture: a single memory holding both program instructions and data, connected to a CPU (control unit and ALU) by an address bus and a data bus.",
+        ja: "フォン・ノイマン型アーキテクチャ：プログラムの命令とデータの両方を保持する単一のメモリが、アドレスバスとデータバスによって CPU（制御ユニットと ALU）に接続されている。",
+      }}
+      viewBox="0 0 560 300"
+      maxHeight={300}
+    >
+      {/* Background */}
+      <rect width="560" height="300" fill={C.panel} rx="8" />
+
+      {/* --- Memory box --- */}
+      <rect
+        x="24"
+        y="40"
+        width="220"
+        height="220"
+        rx="8"
+        fill={C.muted}
+        stroke={C.accent}
+        strokeWidth="1.5"
+      />
+      <text
+        x="134"
+        y="62"
+        textAnchor="middle"
+        fill={C.accent}
+        fontSize="13"
+        fontWeight="700"
+      >
+        Memory
+      </text>
+      <text x="134" y="78" textAnchor="middle" fill={C.faint} fontSize="10">
+        one address space
+      </text>
+
+      {/* program (instructions) cells */}
+      <rect
+        x="44"
+        y="94"
+        width="180"
+        height="70"
+        rx="5"
+        fill={C.panel}
+        stroke={C.high}
+        strokeWidth="1.5"
+      />
+      <text
+        x="134"
+        y="112"
+        textAnchor="middle"
+        fill={C.high}
+        fontSize="11"
+        fontWeight="600"
+      >
+        program (instructions)
+      </text>
+      <text
+        x="134"
+        y="134"
+        textAnchor="middle"
+        fill={C.text}
+        fontSize="10"
+        fontFamily="monospace"
+      >
+        LOAD · ADD · STORE
+      </text>
+      <text
+        x="134"
+        y="150"
+        textAnchor="middle"
+        fill={C.faint}
+        fontSize="10"
+        fontFamily="monospace"
+      >
+        JMP · HALT …
+      </text>
+
+      {/* data cells */}
+      <rect
+        x="44"
+        y="176"
+        width="180"
+        height="64"
+        rx="5"
+        fill={C.panel}
+        stroke={C.warn}
+        strokeWidth="1.5"
+      />
+      <text
+        x="134"
+        y="194"
+        textAnchor="middle"
+        fill={C.warn}
+        fontSize="11"
+        fontWeight="600"
+      >
+        data
+      </text>
+      <text
+        x="134"
+        y="216"
+        textAnchor="middle"
+        fill={C.text}
+        fontSize="10"
+        fontFamily="monospace"
+      >
+        42 · 7 · "hi" · …
+      </text>
+
+      {/* --- CPU box --- */}
+      <rect
+        x="356"
+        y="40"
+        width="180"
+        height="220"
+        rx="8"
+        fill={C.muted}
+        stroke={C.accent}
+        strokeWidth="1.5"
+      />
+      <text
+        x="446"
+        y="62"
+        textAnchor="middle"
+        fill={C.accent}
+        fontSize="13"
+        fontWeight="700"
+      >
+        CPU
+      </text>
+
+      {/* control unit */}
+      <rect
+        x="376"
+        y="82"
+        width="140"
+        height="70"
+        rx="5"
+        fill={C.panel}
+        stroke={C.line}
+        strokeWidth="1.5"
+      />
+      <text
+        x="446"
+        y="112"
+        textAnchor="middle"
+        fill={C.text}
+        fontSize="11"
+        fontWeight="600"
+      >
+        control unit
+      </text>
+      <text x="446" y="130" textAnchor="middle" fill={C.faint} fontSize="10">
+        fetch · decode
+      </text>
+
+      {/* ALU */}
+      <rect
+        x="376"
+        y="164"
+        width="140"
+        height="76"
+        rx="5"
+        fill={C.panel}
+        stroke={C.line}
+        strokeWidth="1.5"
+      />
+      <text
+        x="446"
+        y="196"
+        textAnchor="middle"
+        fill={C.text}
+        fontSize="11"
+        fontWeight="600"
+      >
+        ALU
+      </text>
+      <text x="446" y="214" textAnchor="middle" fill={C.faint} fontSize="10">
+        execute (+ − ∧ ∨)
+      </text>
+
+      {/* --- Buses between Memory and CPU --- */}
+      {/* address bus: CPU → Memory (which cell to read/write) */}
+      <line
+        x1="354"
+        y1="120"
+        x2="246"
+        y2="120"
+        stroke={C.accent}
+        strokeWidth="2"
+        markerEnd={`url(#${sid("arrA")})`}
+      />
+      <text
+        x="300"
+        y="112"
+        textAnchor="middle"
+        fill={C.accent}
+        fontSize="11"
+        fontWeight="600"
+      >
+        address
+      </text>
+
+      {/* data bus: Memory → CPU (instruction or data, same wire) */}
+      <line
+        x1="246"
+        y1="180"
+        x2="354"
+        y2="180"
+        stroke={C.high}
+        strokeWidth="2"
+        markerEnd={`url(#${sid("arrD")})`}
+      />
+      <text
+        x="300"
+        y="172"
+        textAnchor="middle"
+        fill={C.high}
+        fontSize="11"
+        fontWeight="600"
+      >
+        instruction / data
+      </text>
+      <text x="300" y="196" textAnchor="middle" fill={C.faint} fontSize="10">
+        (same bus)
+      </text>
+
+      {/* Punchline banner */}
+      <text
+        x="280"
+        y="282"
+        textAnchor="middle"
+        fill={C.high}
+        fontSize="11"
+        fontStyle="italic"
+      >
+        Instructions live in the SAME memory as data — program as data
+      </text>
+
+      {/* Arrow markers */}
+      <defs>
+        <marker
+          id={sid("arrA")}
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L6,3 L0,6 z" fill={C.accent} />
+        </marker>
+        <marker
+          id={sid("arrD")}
+          markerWidth="6"
+          markerHeight="6"
+          refX="5"
+          refY="3"
+          orient="auto"
+        >
+          <path d="M0,0 L6,3 L0,6 z" fill={C.high} />
+        </marker>
+      </defs>
+    </Diagram>
   );
 }
