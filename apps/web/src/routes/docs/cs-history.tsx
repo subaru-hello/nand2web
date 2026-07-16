@@ -278,8 +278,8 @@ function Page() {
               title: "Faza — Mental models: how software works",
               href: "https://fazamhd.com/mental-models/software/",
               note: {
-                en: "The article whose walkthrough style inspired this page. It was not read while writing; the prose here is original and independent.",
-                ja: "このページのウォークスルー形式に着想を与えた記事。執筆時には読んでおらず、本文はすべてオリジナルで独立に書かれている。",
+                en: "The mental-models walkthrough that inspired this page's format. The prose here is original and independent — Faza's article is a recommended companion read.",
+                ja: "このページのウォークスルー形式に着想を与えたメンタルモデル記事。本文はオリジナルかつ独立に書かれたもので、Faza の記事は併読としておすすめ。",
               },
             },
             {

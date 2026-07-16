@@ -160,8 +160,8 @@ export const CS_HISTORY_STAGES: readonly CsHistoryStage[] = [
       ja: "7. アルゴリズムと計算量——効率が科学になる",
     },
     milestone: {
-      en: "Donald Knuth began *The Art of Computer Programming* in 1968, treating algorithms as objects of rigorous mathematical study. Big-O notation gave a language for asymptotic cost, and in 1971 Stephen Cook (with Leonid Levin independently) framed **P vs NP** — whether every problem whose answer is easy to *check* is also easy to *solve* — which remains the field's most famous open question.",
-      ja: "ドナルド・クヌースは1968年に『The Art of Computer Programming』を書き始め、アルゴリズムを厳密な数学的研究の対象として扱った。O記法は漸近的コストを語る言語を与え、1971年にはスティーブン・クック（レオニード・レビンが独立に）が**P対NP**——答えを*検証*しやすい問題はすべて*解く*のも容易か——を定式化した。これは今なおこの分野で最も有名な未解決問題である。",
+      en: "Donald Knuth published the first volume of *The Art of Computer Programming* in 1968, treating algorithms as objects of rigorous mathematical study. Big-O notation gave a language for asymptotic cost, and in 1971 Stephen Cook (with Leonid Levin independently) framed **P vs NP** — whether every problem whose answer is easy to *check* is also easy to *solve* — which remains the field's most famous open question.",
+      ja: "ドナルド・クヌースは1968年に『The Art of Computer Programming』第1巻を刊行し、アルゴリズムを厳密な数学的研究の対象として扱った。O記法は漸近的コストを語る言語を与え、1971年にはスティーブン・クック（レオニード・レビンが独立に）が**P対NP**——答えを*検証*しやすい問題はすべて*解く*のも容易か——を定式化した。これは今なおこの分野で最も有名な未解決問題である。",
     },
     mentalModel: {
       en: "**Efficiency is about how cost grows, not how fast the machine is.** Big-O captures the *shape* of an algorithm's cost as the input grows: an O(n log n) sort will eventually beat an O(n²) sort on large inputs no matter how fast the slower one's hardware. Complexity theory then classifies problems by inherent difficulty — some are tractable, some (the NP-hard ones) appear to require exponential effort — a hierarchy that is a property of the problem itself, independent of any computer.",
